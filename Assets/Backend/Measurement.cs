@@ -87,7 +87,7 @@ public class Measurement : MonoBehaviour
             foreach(var block in data.Blocks)
             {
                 stream.WriteLine("Block,"+block.Typ);
-                stream.WriteLine("Name,Interaktionen,RT1,RT2,RT3,CRESP");
+                stream.WriteLine("Name,Drehungen,Platzierungen,RT1,RT2,RT3,CRESP");
                 foreach(var trial in block.Trials)
                 {
                     long RT1 = 0;
@@ -96,7 +96,18 @@ public class Measurement : MonoBehaviour
                     long RT3 = 0;
                     for(int i = 1; i<trial.Interaktionen.Count; ++i)
                         RT3 += trial.Interaktionen[i].Zeitpunkt;
-                    stream.WriteLine(trial.Name+","+trial.Interaktionen.Count.ToString()+","+RT1.ToString()+",na,"+RT3.ToString()+",na");
+                    int rotationCount = 0;
+                    int placementCount = 0;
+                    for(int i = 0; i<trial.Interaktionen.Count; ++i)
+                    {
+                        if(trial.Interaktionen[i] is Platzierung)
+                            placementCount++;
+                        if(trial.Interaktionen[i] is Drehung)
+                            rotationCount++;
+                    }
+                    
+                    
+                    stream.WriteLine(trial.Name+","+rotationCount.ToString()+","+placementCount.ToString()+","+RT1.ToString()+",na,"+RT3.ToString()+",na");
                 }
             }
             stream.Flush();
