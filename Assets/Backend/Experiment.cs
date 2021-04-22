@@ -30,7 +30,7 @@ public class Experiment : MonoBehaviour
         
         measurement = gameObject.AddComponent(typeof(Measurement)) as Measurement;
         
-        ExperimentConfig.Load("config.xml");
+        //ExperimentConfig.Load("config.xml");
     }
     // Start is called before the first frame update
     void Start()
