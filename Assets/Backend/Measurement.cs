@@ -5,6 +5,12 @@ using System.IO;
 using System.Xml;
 using System.Xml.Serialization;
 
+/**
+ * DAS IST EIN TESTKOMMENTAR FUER DUMME LEUTE
+ * 
+ */
+
+
 public class Measurement : MonoBehaviour
 {
     private Messdaten data;
