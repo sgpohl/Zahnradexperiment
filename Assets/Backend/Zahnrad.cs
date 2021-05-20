@@ -8,6 +8,11 @@ public class Zahnrad : MonoBehaviour
     private CircleCollider2D OuterRadius;
 
     public List<Zahnrad> ConnectedCogs;
+    public bool IsFixedInPlace = false;
+    public bool CanRotateManually = true;
+    public bool IsStart = false;
+    public bool IsTarget = false;
+    public int Direction = 0;
     void Awake()
     {
         ConnectedCogs = new List<Zahnrad>();
@@ -56,7 +61,6 @@ public class Zahnrad : MonoBehaviour
     private float AverageRotationSpeed;
     void Update()
     {
-        
         /*
         if(Input.touchCount > 0)
         {
@@ -74,30 +78,32 @@ public class Zahnrad : MonoBehaviour
                     break;
             }
         }*/
-        
-        if(CursorSelected)
+
+        if (CursorSelected)
         {
             Vector3 tpos = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, Camera.main.nearClipPlane));
-            transform.position = new Vector3(
-                SelectionOffset.x + tpos.x,
-                SelectionOffset.y + tpos.y,
-                transform.position.z
-            );
+            Vector2 spos = SnapToGrid(tpos.x + SelectionOffset.x, tpos.y + SelectionOffset.y);
+            if(Experiment.Instance.PositionIsValid(spos, this))
+                transform.position = new Vector3(spos.x, spos.y, transform.position.z);
         }
         
         if(CursorRotating)
         {
-            Vector3 mouse = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, Camera.main.nearClipPlane));
-            Vector2 rotator = OuterRadius.ClosestPoint(mouse);
-            float rotation = Vector2.SignedAngle(RotationAttachmentPoint-(Vector2)transform.position, rotator-(Vector2)transform.position);
-            RotateAll(rotation);
-            TotalRotation += rotation;
-            RotationAttachmentPoint = rotator;
-            
-            AverageRotationSpeed = rotation/Time.deltaTime;//(1-5*Time.deltaTime)*AverageRotationSpeed + 5*Time.deltaTime*rotation;
+            if(CanRotate)
+            {
+                Vector3 mouse = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, Camera.main.nearClipPlane));
+                Vector2 rotator = OuterRadius.ClosestPoint(mouse);
+                float rotation = Vector2.SignedAngle(RotationAttachmentPoint - (Vector2)transform.position, rotator - (Vector2)transform.position);
+                RotateAll(rotation);
+                TotalRotation += rotation;
+                RotationAttachmentPoint = rotator;
+
+                AverageRotationSpeed = rotation / Time.deltaTime;//(1-5*Time.deltaTime)*AverageRotationSpeed + 5*Time.deltaTime*rotation;
+            }
         }
-        
-        transform.RotateAround(transform.position, Vector3.forward, RotationSpeed * Time.deltaTime);
+
+        if (CanRotate)
+            transform.RotateAround(transform.position, Vector3.forward, RotationSpeed * Time.deltaTime);
     }
     //Detect when the user clicks the GameObject
     void OnMouseDown()
@@ -114,10 +120,13 @@ public class Zahnrad : MonoBehaviour
         pos = Camera.main.ScreenToWorldPoint(new Vector3(pos.x, pos.y, Camera.main.nearClipPlane));
         if(InnerRadius.OverlapPoint(pos))
         {
-            SelectionOffset = ((Vector2)transform.position) - pos;
-            Speed = 0;
-            Disconnect();
-            CursorSelected = true;
+            if (!IsFixedInPlace)
+            {
+                SelectionOffset = ((Vector2)transform.position) - pos;
+                Speed = 0;
+                Disconnect();
+                CursorSelected = true;
+            }
         }
         else
         {
@@ -128,11 +137,14 @@ public class Zahnrad : MonoBehaviour
                 SetSpeed(-30 / InnerRadius.bounds.extents[0]);
             Experiment.Instance.RotationApplied(this, RotationSpeed);
             */
-            Speed = 0;
-            TotalRotation = 0;
-            AverageRotationSpeed = 0;
-            RotationAttachmentPoint = pos;
-            CursorRotating = true;
+            if(CanRotateManually)
+            {
+                Speed = 0;
+                TotalRotation = 0;
+                AverageRotationSpeed = 0;
+                RotationAttachmentPoint = pos;
+                CursorRotating = true;
+            }
         }
     }
     
@@ -151,6 +163,24 @@ public class Zahnrad : MonoBehaviour
             Experiment.Instance.RotationApplied(this, TotalRotation);
         }
     }
+
+    private Vector2 SnapToGrid(float x, float y)
+    {
+        if (Experiment.Instance.GridSize == 0.0f)
+            return new Vector2(x, y);
+
+        float g = Experiment.Instance.GridSize;
+        x += g / 2;
+        y += g / 2;
+        int ix = (int)(x / g);
+        if (x < 0)
+            ix--;
+        int iy = (int)(y / g);
+        if (y < 0)
+            iy--;
+
+        return new Vector2(ix * Experiment.Instance.GridSize, iy * Experiment.Instance.GridSize);
+    }
     
     public static float TranslationFactor(Zahnrad from, Zahnrad to)
     {
@@ -158,11 +188,13 @@ public class Zahnrad : MonoBehaviour
     }
 
     private bool rec_updated = false;
+    private int _rec_dir = 0;
     private void rec_finished()
     {
         if (!rec_updated)
             return;
         rec_updated = false;
+        _rec_dir = 0;
         foreach (var c in ConnectedCogs)
             c.rec_finished();
     }
@@ -191,15 +223,48 @@ public class Zahnrad : MonoBehaviour
         rec_finished();
     }
 
+    private bool CanRotate;
+    public bool _TestRotate(int desired)
+    {
+        if (_rec_dir == desired)
+            return true;
+        if (_rec_dir != 0)
+            return false;
+        _rec_dir = desired;
+        foreach (var c in ConnectedCogs)
+            if (!c._TestRotate(-desired))
+                return false;
+        return true;
+    }
+    private void _PropagateCanRotatate(bool b)
+    {
+        if (rec_updated)
+            return;
+        rec_updated = true;
+        CanRotate = b;
+        foreach (var c in ConnectedCogs)
+            c._PropagateCanRotatate(b);
+    }
+    public void TestRotate()
+    {
+        _PropagateCanRotatate(_TestRotate(1));
+        rec_finished();
+    }
+
     public bool Intersects(Zahnrad other)
     {
         Vector2 v = OuterRadius.ClosestPoint(other.transform.position);
         return other.OuterRadius.bounds.Contains(v);
     }
+    public bool Overlaps(Zahnrad other, Vector2 pos)
+    {
+        return Vector2.Distance(other.transform.position, pos) < (InnerRadius.radius + other.OuterRadius.radius);
+    }
 
     public void ConnectTo(Zahnrad other)
     {
         ConnectedCogs.Add(other);
+        TestRotate();
     }
     
     public void Disconnect()
@@ -207,7 +272,9 @@ public class Zahnrad : MonoBehaviour
         foreach(Zahnrad c in ConnectedCogs)
         {
             c.ConnectedCogs.Remove(this);
+            c.TestRotate();
         }
         ConnectedCogs.Clear();
+        TestRotate();
     }
 }

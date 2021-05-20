@@ -5,12 +5,13 @@ using UnityEngine.SceneManagement;
 
 public class Experiment : MonoBehaviour
 {
-    public static Experiment Instance    {get;private set;}
+    public static Experiment Instance   {get;private set;}
 
     private List<Zahnrad> Cogs;
     private System.Diagnostics.Stopwatch timer;
     
     private Measurement measurement;
+    private Canvas menue;
 
     void Awake()
     {
@@ -25,26 +26,49 @@ public class Experiment : MonoBehaviour
 
         Instance = this;
 
+        GridSize = 0.25f;
         Cogs = new List<Zahnrad>();
         timer = new System.Diagnostics.Stopwatch();
         
         measurement = gameObject.AddComponent(typeof(Measurement)) as Measurement;
-        
+
         //ExperimentConfig.Load("config.xml");
+
+        Object[] canvas = GameObject.FindObjectsOfType(typeof(Canvas));
+        menue = (Canvas)canvas[0];
     }
     // Start is called before the first frame update
     void Start()
     {
         measurement.Init(0, "noConfig");
-        
-        LoadScene("instructions");
+
+        //LoadScene("instructions");
+    }
+
+    public void OpenDataFolder()
+    {
+        //TODO: windows only
+        string winPath = Application.persistentDataPath.Replace("/", "\\");
+        System.Diagnostics.Process.Start("explorer.exe", winPath);
+
+        Debug.Log(winPath);
+    }
+
+    private string trialPrefix = null;
+    private int trialNum = 0;
+    public void StartBlock(string name)
+    {
+        trialPrefix = name;
+        trialNum = 0;
+        LoadScene(name+"_instructions");
+        menue.enabled = false;
+        Debug.Log("start "+name);
     }
 
     // Update is called once per frame
     private bool measuring = false;
     private float FPS = 0;
     private float dtime = 0;
-    private int trialNum = 0;
     void Update()
     {
         FPS = 1.0f / Time.deltaTime;
@@ -65,20 +89,21 @@ public class Experiment : MonoBehaviour
             measurement.Finish();
             Application.Quit();
         }
-        if (Input.GetKeyUp("space"))
+        if (Input.GetKeyUp("space") && trialPrefix != null)
         {
             trialNum++;
             
             EndTrial();
             if (!IsValidTrial(trialNum))
             {
-                //Debug.Log("invalid: trial" + trialNum.ToString());
+                Debug.Log("invalid: "+ trialPrefix + trialNum.ToString());
                 //trialNum = 1;
-                LoadScene("debriefing");
+                //LoadScene("debriefing");
+                EndBlock();
             }
             else 
             {
-                var name = "trial" + trialNum.ToString();
+                var name = trialPrefix + trialNum.ToString();
                 LoadScene(name);
                 measurement.newTrial(name);
             }
@@ -99,7 +124,7 @@ public class Experiment : MonoBehaviour
         for (var i = 0; i < SceneManager.sceneCountInBuildSettings; i++)
         {
             string x = SceneUtility.GetScenePathByBuildIndex(i);
-            if (x.Contains("/trial" + idx.ToString() + ".unity"))
+            if (x.Contains("/"+ trialPrefix + idx.ToString() + ".unity"))
                 return true;
         }
         return false;
@@ -130,7 +155,16 @@ public class Experiment : MonoBehaviour
 
     public void EndTrial()
     {
+        Debug.Log("EndTrial: " + trialPrefix + trialNum.ToString());
         Cogs.Clear();
+    }
+
+    private void EndBlock()
+    {
+        Debug.Log("EndBlock: " + trialPrefix);
+        SceneManager.UnloadSceneAsync(SceneManager.GetSceneAt(1));
+        menue.enabled = true;
+        trialPrefix = null;
     }
 
     public void RegisterCog(Zahnrad cog)
@@ -154,6 +188,18 @@ public class Experiment : MonoBehaviour
             }
         }
     }
+
+    public bool PositionIsValid(Vector2 pos, Zahnrad cog)
+    {
+        for (int i = 0; i < Cogs.Count; ++i)
+        {
+            if (Cogs[i] == cog)
+                continue;
+            if (cog.Overlaps(Cogs[i], pos))
+                return false;
+        }
+        return true;
+    }
     
     public void RotationApplied(Zahnrad cog, float speed)
     {
@@ -166,4 +212,6 @@ public class Experiment : MonoBehaviour
         bool connected = cog.ConnectedCogs.Count > 0;
         measurement.MeasureCogPlaced((int)(pos.x*10), (int)(pos.y*10), connected, id);
     }
+
+    public float GridSize;
 }
