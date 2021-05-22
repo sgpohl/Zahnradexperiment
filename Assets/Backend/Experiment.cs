@@ -12,6 +12,7 @@ public class Experiment : MonoBehaviour
     
     private Measurement measurement;
     private Canvas menue;
+    public Spielbrett GameBoard { get; private set; }
 
     void Awake()
     {
@@ -26,7 +27,6 @@ public class Experiment : MonoBehaviour
 
         Instance = this;
 
-        GridSize = 0.25f;
         Cogs = new List<Zahnrad>();
         timer = new System.Diagnostics.Stopwatch();
         
@@ -36,6 +36,8 @@ public class Experiment : MonoBehaviour
 
         Object[] canvas = GameObject.FindObjectsOfType(typeof(Canvas));
         menue = (Canvas)canvas[0];
+
+        SceneManager.sceneLoaded += InitScene;
     }
     // Start is called before the first frame update
     void Start()
@@ -62,7 +64,7 @@ public class Experiment : MonoBehaviour
         trialNum = 0;
         LoadScene(name+"_instructions");
         menue.enabled = false;
-        Debug.Log("start "+name);
+        Debug.Log("start "+name+ "  "+ SceneManager.GetActiveScene().buildIndex.ToString());
     }
 
     // Update is called once per frame
@@ -151,6 +153,20 @@ public class Experiment : MonoBehaviour
         }
         else
             SceneManager.LoadScene(name, LoadSceneMode.Additive);
+
+    }
+
+    private void InitScene(Scene scene, LoadSceneMode mode)
+    {
+        GameObject go = GameObject.Find("Spielbrett");
+        if (go != null)
+        {
+            GameBoard = go.GetComponent<Spielbrett>();
+            Debug.Log("GameBoard present");
+
+        }
+        else
+            GameBoard = null;
     }
 
     public void EndTrial()
@@ -212,6 +228,4 @@ public class Experiment : MonoBehaviour
         bool connected = cog.ConnectedCogs.Count > 0;
         measurement.MeasureCogPlaced((int)(pos.x*10), (int)(pos.y*10), connected, id);
     }
-
-    public float GridSize;
 }

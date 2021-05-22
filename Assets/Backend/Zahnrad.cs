@@ -13,6 +13,8 @@ public class Zahnrad : MonoBehaviour
     public bool IsStart = false;
     public bool IsTarget = false;
     public int Direction = 0;
+    private SpriteRenderer sprite;
+
     void Awake()
     {
         ConnectedCogs = new List<Zahnrad>();
@@ -33,6 +35,8 @@ public class Zahnrad : MonoBehaviour
     void Start()
     {
         Experiment.Instance.RegisterCog(this);
+
+        sprite = GetComponent<SpriteRenderer>();
     }
 
     // Update is called once per frame
@@ -59,6 +63,8 @@ public class Zahnrad : MonoBehaviour
     private Vector2 RotationAttachmentPoint;
     private float TotalRotation;
     private float AverageRotationSpeed;
+    private Vector3 PreRotationAngle;
+    private float WiggleAngle;
     void Update()
     {
         /*
@@ -83,28 +89,44 @@ public class Zahnrad : MonoBehaviour
         {
             Vector3 tpos = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, Camera.main.nearClipPlane));
             Vector2 spos = SnapToGrid(tpos.x + SelectionOffset.x, tpos.y + SelectionOffset.y);
+            
             if(Experiment.Instance.PositionIsValid(spos, this))
                 transform.position = new Vector3(spos.x, spos.y, transform.position.z);
         }
         
         if(CursorRotating)
         {
-            if(CanRotate)
+            Vector3 mouse = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, Camera.main.nearClipPlane));
+            Vector2 rotator = OuterRadius.ClosestPoint(mouse);
+            float rotation = Vector2.SignedAngle(RotationAttachmentPoint - (Vector2)transform.position, rotator - (Vector2)transform.position);
+            if (CanRotate)
             {
-                Vector3 mouse = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, Camera.main.nearClipPlane));
-                Vector2 rotator = OuterRadius.ClosestPoint(mouse);
-                float rotation = Vector2.SignedAngle(RotationAttachmentPoint - (Vector2)transform.position, rotator - (Vector2)transform.position);
                 RotateAll(rotation);
                 TotalRotation += rotation;
                 RotationAttachmentPoint = rotator;
 
                 AverageRotationSpeed = rotation / Time.deltaTime;//(1-5*Time.deltaTime)*AverageRotationSpeed + 5*Time.deltaTime*rotation;
             }
+            else
+            {
+                float d = Random.Range(0.0f, Mathf.Min(Mathf.Abs(rotation) * 0.1f, 2.0f));
+                d *= -Mathf.Sign(WiggleAngle);
+                RotateAll(d);
+                WiggleAngle += d;
+            }
         }
 
         if (CanRotate)
             transform.RotateAround(transform.position, Vector3.forward, RotationSpeed * Time.deltaTime);
     }
+
+    private Vector2 SnapToGrid(float x, float y)
+    {
+        if (Experiment.Instance.GameBoard != null)
+            return Experiment.Instance.GameBoard.SnapToGrid(x, y);
+        return new Vector2(x, y);
+    }
+
     //Detect when the user clicks the GameObject
     void OnMouseDown()
     {
@@ -126,6 +148,9 @@ public class Zahnrad : MonoBehaviour
                 Speed = 0;
                 Disconnect();
                 CursorSelected = true;
+                transform.localScale = Vector3.one * 1.15f;
+
+                sprite.sortingOrder = 3;
             }
         }
         else
@@ -144,6 +169,8 @@ public class Zahnrad : MonoBehaviour
                 AverageRotationSpeed = 0;
                 RotationAttachmentPoint = pos;
                 CursorRotating = true;
+                PreRotationAngle = transform.eulerAngles;
+                WiggleAngle = 0;
             }
         }
     }
@@ -155,31 +182,18 @@ public class Zahnrad : MonoBehaviour
             CursorSelected = false;
             Experiment.Instance.ConnectCog(this);
             Experiment.Instance.PlacementApplied(this, (Vector2)transform.position);
+
+            transform.localScale = Vector3.one;
+            sprite.sortingOrder = 1;
         }
         if(CursorRotating)
         {
             CursorRotating = false;
             Speed = AverageRotationSpeed;
             Experiment.Instance.RotationApplied(this, TotalRotation);
+            if(!CanRotate)
+                transform.eulerAngles = PreRotationAngle;
         }
-    }
-
-    private Vector2 SnapToGrid(float x, float y)
-    {
-        if (Experiment.Instance.GridSize == 0.0f)
-            return new Vector2(x, y);
-
-        float g = Experiment.Instance.GridSize;
-        x += g / 2;
-        y += g / 2;
-        int ix = (int)(x / g);
-        if (x < 0)
-            ix--;
-        int iy = (int)(y / g);
-        if (y < 0)
-            iy--;
-
-        return new Vector2(ix * Experiment.Instance.GridSize, iy * Experiment.Instance.GridSize);
     }
     
     public static float TranslationFactor(Zahnrad from, Zahnrad to)
