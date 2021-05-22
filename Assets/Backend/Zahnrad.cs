@@ -268,8 +268,9 @@ public class Zahnrad : MonoBehaviour
 
     public bool Intersects(Zahnrad other)
     {
-        Vector2 v = OuterRadius.ClosestPoint(other.transform.position);
-        return other.OuterRadius.bounds.Contains(v);
+        //Vector2 v = OuterRadius.ClosestPoint(other.transform.position);
+        //return other.OuterRadius.bounds.Contains(v);
+        return Vector2.Distance(other.transform.position, transform.position) < (OuterRadius.radius + other.OuterRadius.radius)*0.95;
     }
     public bool Overlaps(Zahnrad other, Vector2 pos)
     {
