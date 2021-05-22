@@ -4,8 +4,8 @@ using UnityEngine;
 
 public class Zahnrad : MonoBehaviour
 {
-    private CircleCollider2D InnerRadius;
-    private CircleCollider2D OuterRadius;
+    public CircleCollider2D InnerRadius { get; private set; }
+    public CircleCollider2D OuterRadius { get; private set; }
 
     public List<Zahnrad> ConnectedCogs;
     public bool IsFixedInPlace = false;
@@ -89,8 +89,9 @@ public class Zahnrad : MonoBehaviour
         {
             Vector3 tpos = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, Camera.main.nearClipPlane));
             Vector2 spos = SnapToGrid(tpos.x + SelectionOffset.x, tpos.y + SelectionOffset.y);
-            
-            if(Experiment.Instance.PositionIsValid(spos, this))
+            spos = Experiment.Instance.NearestPositionCandidate(spos, this);
+
+            if (Experiment.Instance.PositionIsValid(spos, this))
                 transform.position = new Vector3(spos.x, spos.y, transform.position.z);
         }
         

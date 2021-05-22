@@ -216,6 +216,28 @@ public class Experiment : MonoBehaviour
         }
         return true;
     }
+
+    public Vector2 NearestPositionCandidate(Vector2 pos, Zahnrad cog)
+    {
+        Zahnrad overlapping = null;
+        for (int i = 0; i < Cogs.Count; ++i)
+        {
+            if (Cogs[i] == cog)
+                continue;
+            if (cog.Overlaps(Cogs[i], pos))
+            {
+                overlapping = Cogs[i];
+                break;
+            }
+        }
+        if (overlapping == null)
+            return pos;
+        Vector2 diff = pos - (Vector2)overlapping.transform.position;
+        diff.Normalize();
+        diff *= cog.InnerRadius.radius + overlapping.OuterRadius.radius;
+
+        return (Vector2)overlapping.transform.position + diff;
+    }
     
     public void RotationApplied(Zahnrad cog, float speed)
     {
