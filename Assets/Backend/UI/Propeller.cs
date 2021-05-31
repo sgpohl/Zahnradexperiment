@@ -49,14 +49,17 @@ public class Propeller : MonoBehaviour
     private Vector2 SnapToCog(float x, float y)
     {
         Zahnrad below = Experiment.Instance.CogAt(new Vector2(x,y));
-        if(below == null)
+        if(below == null || below.IsStart)
             return new Vector2(x, y);
         return below.transform.position;
     }
 
     private Zahnrad CogBelow()
     {
-        return Experiment.Instance.CogAt(this.transform.position);
+        Zahnrad cog = Experiment.Instance.CogAt(this.transform.position);
+        if (cog == null || cog.IsStart)
+            return null;
+        return cog;
     }
 
 
