@@ -15,6 +15,16 @@ public class Measurement : MonoBehaviour
 {
     private Messdaten data;
     private System.Diagnostics.Stopwatch timer;
+
+    public int VPN_Num
+    {
+        get => data.VPN;
+        set
+        {
+            data.VPN = value;
+        }
+    }
+
     // Start is called before the first frame update
     void Start()
     {

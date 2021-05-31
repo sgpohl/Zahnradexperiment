@@ -56,4 +56,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/propeller/propeller1.unity
     guid: 85e1b7993aeef3549afb667d2233f1bd
+  - enabled: 1
+    path: Assets/Scenes/board.unity
+    guid: 5ee77b17c9757f44f8f86a823ec18f91
   m_configObjects: {}

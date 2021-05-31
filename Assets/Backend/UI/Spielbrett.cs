@@ -26,11 +26,16 @@ public class Spielbrett : MonoBehaviour
         
     }
 
+    public bool Contains(float x, float y)
+    {
+        return spRenderer.bounds.Contains(new Vector3(x, y, 0));
+    }
+
     public Vector2 SnapToGrid(float x, float y)
     {
         if (Rastergroesse == 0.0f)
             return new Vector2(x, y);
-        if (!spRenderer.bounds.Contains(new Vector3(x, y, 0)))
+        if (!Contains(x, y))
             return new Vector2(x, y);
 
         float xo = spRenderer.bounds.extents.x % Rastergroesse;
@@ -72,6 +77,15 @@ public class Spielbrett : MonoBehaviour
         o.transform.localScale *= Rastergroesse*0.15f;
 
         SpriteRenderer renderer = o.AddComponent<SpriteRenderer>();
+        renderer.sortingOrder = 0;
+        /*
+        Color tmp = renderer.color;
+        tmp.r = 0.4f;
+        tmp.b = 0.4f;
+        tmp.g = 0.4f;
+        tmp.a = 1.0f;
+        renderer.color = tmp;
+        */
         renderer.sprite = sprite;
     }
 

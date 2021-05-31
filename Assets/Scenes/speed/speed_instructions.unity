@@ -132,7 +132,9 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 303862391086869193, guid: 04143813b3d265648a638d9026631d89, type: 3}
       propertyPath: m_Text
-      value: Leertaste zum fortfahren
+      value: "Drehgeschwindigkeit:\nZahnrad ausw\xE4hlen, dass sich m\xF6glichst
+        \nschnell / gleich schnell / langsam drehen soll,\nwenn es an das Startzahnrad
+        angelegt wird."
       objectReference: {fileID: 0}
     - target: {fileID: 303862391086869195, guid: 04143813b3d265648a638d9026631d89, type: 3}
       propertyPath: m_RootOrder
