@@ -2,34 +2,49 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Auswahlpfeil : MonoBehaviour
+public class Auswahlzahnrad : MonoBehaviour
 {
-    public DirectionTrial.Direction Richtung;
+    public int Size;
     private bool Selected = false;
 
     private float ClickedDuration = 0.0f;
     private const float TargetTimeForEffect = 0.1f;
 
 
+    void Awake()
+    {
+        CircleCollider2D[] colliders = GetComponents<CircleCollider2D>();
+        CircleCollider2D InnerRadius;
+        if (colliders[0].bounds.extents[0] > colliders[1].bounds.extents[0])
+            InnerRadius = colliders[1];
+        else
+            InnerRadius = colliders[0];
+        Size = (int)(InnerRadius.bounds.extents[0] * 20 + 0.5);
+    }
+    void Start()
+    {
+        //Experiment.Instance.RegisterCog(this);
+    }
+
     void Update()
     {
         if (Clicked)
         {
-            if(!Selected)
+            if (!Selected)
                 ClickedDuration += Time.deltaTime;
 
             if (ClickedDuration > TargetTimeForEffect)
             {
                 ClickedDuration = TargetTimeForEffect;
                 Selected = true;
-                Experiment.CurrentTrial<DirectionTrial>().SelectDirection(Richtung);
+                //Experiment.Instance.SelectCog(this);
             }
         }
 
-        if (Selected && Experiment.CurrentTrial<DirectionTrial>().SelectedDirection != Richtung)
-            Deselect();
+        //if (Selected && Experiment.Instance.SelectedCog != this)
+        //    Deselect();
 
-        if(!Clicked && !Selected)
+        if (!Clicked && !Selected)
             ClickedDuration = 0.0f;
 
         float progress = ClickedDuration / TargetTimeForEffect;

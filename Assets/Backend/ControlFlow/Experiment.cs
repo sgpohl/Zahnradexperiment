@@ -6,14 +6,30 @@ using UnityEngine.SceneManagement;
 public class Experiment : MonoBehaviour
 {
     public static Experiment Instance { get; private set; }
-
-    private List<Zahnrad> Cogs;
+    
     private System.Diagnostics.Stopwatch timer;
 
-    private Measurement measurement;
+    public Measurement measurement;
     private Canvas menue;
-    public Spielbrett GameBoard { get; private set; }
     public PlayButton ContinueButton { private get; set; }
+
+    private List<Block> Blocks;
+    public static Block CurrentBlock
+    {
+        get
+        {
+            if (Experiment.Instance.Blocks.Count == 0)
+                return null;
+            return Experiment.Instance.Blocks[Experiment.Instance.Blocks.Count - 1];
+        }
+    }
+    public static T CurrentTrial<T>() where T : class
+    {
+        if(Experiment.CurrentBlock == null)
+            throw new System.ArgumentOutOfRangeException("No block loaded");
+        return Experiment.CurrentBlock.CurrentTrial as T;
+    }
+    public static bool TrialIsActive { get { return CurrentBlock != null && CurrentBlock.TrialCount > 0; } }
 
     void Awake()
     {
@@ -27,9 +43,9 @@ public class Experiment : MonoBehaviour
         }
 
         Instance = this;
-
-        Cogs = new List<Zahnrad>();
+        
         timer = new System.Diagnostics.Stopwatch();
+        Blocks = new List<Block>();
         
         measurement = gameObject.AddComponent(typeof(Measurement)) as Measurement;
 
@@ -63,6 +79,9 @@ public class Experiment : MonoBehaviour
     {
         trialPrefix = name;
         trialNum = 0;
+
+        Blocks.Add(Block.Instantiate(name));
+
         LoadScene(name+"_instructions", false);
         menue.enabled = false;
         Debug.Log("start "+name+ "  "+ SceneManager.GetActiveScene().buildIndex.ToString());
@@ -73,11 +92,9 @@ public class Experiment : MonoBehaviour
     // Update is called once per frame
     private bool measuring = false;
     private float FPS = 0;
-    private float dtime = 0;
     void Update()
     {
         FPS = 1.0f / Time.deltaTime;
-        dtime = Time.deltaTime;
         if (Input.GetMouseButtonUp(1))
             if(measuring)
             {
@@ -98,22 +115,16 @@ public class Experiment : MonoBehaviour
         {
             NextTrial();
         }*/
-        
-        if(Cogs.Count > 0)
-        {
-            var cog = Cogs[0];
-            if(System.Math.Abs(cog.Speed) > 0)
-            {
-                cog.Speed = cog.Speed*(1-dtime);
-            }
-        }
+        if(CurrentBlock != null)
+            CurrentBlock.Update(Time.deltaTime);
     }
 
     public void NextTrial()
     {
         trialNum++;
 
-        EndTrial();
+        if(TrialIsActive)
+            EndTrial();
         if (!IsValidTrial(trialNum))
         {
             //Debug.Log("invalid: " + trialPrefix + trialNum.ToString());
@@ -123,6 +134,7 @@ public class Experiment : MonoBehaviour
         }
         else
         {
+            CurrentBlock.OpenTrial();
             var name = trialPrefix + trialNum.ToString();
             LoadScene(name);
             measurement.newTrial(name);
@@ -216,20 +228,13 @@ public class Experiment : MonoBehaviour
 
     private void InitScene(Scene scene, LoadSceneMode mode)
     {
-        GameObject go = GameObject.Find("Spielbrett");
-        if (go != null)
-        {
-            GameBoard = go.GetComponent<Spielbrett>();
-            //Debug.Log("GameBoard present");
-        }
-        else
-            GameBoard = null;
+        if(TrialIsActive)
+            CurrentTrial<Trial>().Open();
     }
 
     public void EndTrial()
     {
-        //Debug.Log("EndTrial: " + trialPrefix + trialNum.ToString());
-        Cogs.Clear();
+        CurrentTrial<Trial>().Close();
     }
 
     private void EndBlock()
@@ -239,90 +244,5 @@ public class Experiment : MonoBehaviour
         menue.enabled = true;
         trialPrefix = null;
         ContinueButton.Deactivate();
-    }
-
-    public void RegisterCog(Zahnrad cog)
-    {
-        Cogs.Add(cog);
-        ConnectCog(cog);
-        measurement.SaveCogInfo(Cogs.Count-1, cog.Size);
-    }
-    
-    public void ConnectCog(Zahnrad cog)
-    {
-        cog.Disconnect();
-        for (int i = 0; i<Cogs.Count; ++i)
-        {
-            if(Cogs[i] == cog)
-                continue;
-            if (Cogs[i].Intersects(cog))
-            {
-                Cogs[i].ConnectTo(cog);
-                cog.ConnectTo(Cogs[i]);
-            }
-        }
-    }
-
-    public bool PositionIsValid(Vector2 pos, Zahnrad cog)
-    {
-        for (int i = 0; i < Cogs.Count; ++i)
-        {
-            if (Cogs[i] == cog)
-                continue;
-            if (cog.Overlaps(Cogs[i], pos))
-                return false;
-        }
-        return true;
-    }
-
-    public Zahnrad CogAt(Vector2 pos)
-    {
-        for (int i = 0; i < Cogs.Count; ++i)
-        {
-            if (Cogs[i].Contains(pos))
-                return Cogs[i];
-        }
-        return null;
-    }
-
-    public Vector2 NearestPositionCandidate(Vector2 pos, Zahnrad cog)
-    {
-        Zahnrad overlapping = null;
-        for (int i = 0; i < Cogs.Count; ++i)
-        {
-            if (Cogs[i] == cog)
-                continue;
-            if (cog.Overlaps(Cogs[i], pos))
-            {
-                overlapping = Cogs[i];
-                break;
-            }
-        }
-        if (overlapping == null)
-            return pos;
-        Vector2 diff = pos - (Vector2)overlapping.transform.position;
-        diff.Normalize();
-        diff *= cog.InnerRadius.radius + overlapping.OuterRadius.radius;
-
-        return (Vector2)overlapping.transform.position + diff;
-    }
-    
-    public void RotationApplied(Zahnrad cog, float speed)
-    {
-        int id = Cogs.FindIndex(c => c == cog);
-        measurement.MeasureCogRotated((int)speed, id);
-    }
-    public void PlacementApplied(Zahnrad cog, Vector2 pos)
-    {
-        int id = Cogs.FindIndex(c => c == cog);
-        bool connected = cog.ConnectedCogs.Count > 0;
-        measurement.MeasureCogPlaced((int)(pos.x*10), (int)(pos.y*10), connected, id);
-    }
-
-    public int SelectedDirection { get; private set; }
-    public void SelectDirection(int dir)
-    {
-        SelectedDirection = dir;
-        //TODO: measurement
     }
 }

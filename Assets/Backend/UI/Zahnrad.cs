@@ -15,6 +15,8 @@ public class Zahnrad : MonoBehaviour
     public int Direction = 0;
     public SpriteRenderer sprite;
 
+    private CogTrial CurrentTrial { get { return Experiment.CurrentTrial<CogTrial>(); } }
+
     void Awake()
     {
         ConnectedCogs = new List<Zahnrad>();
@@ -34,7 +36,7 @@ public class Zahnrad : MonoBehaviour
     }
     void Start()
     {
-        Experiment.Instance.RegisterCog(this);
+        CurrentTrial.RegisterCog(this);
 
         sprite = GetComponent<SpriteRenderer>();
     }
@@ -89,9 +91,9 @@ public class Zahnrad : MonoBehaviour
         {
             Vector3 tpos = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, Camera.main.nearClipPlane));
             Vector2 spos = SnapToGrid(tpos.x + SelectionOffset.x, tpos.y + SelectionOffset.y);
-            spos = Experiment.Instance.NearestPositionCandidate(spos, this);
+            spos = CurrentTrial.NearestPositionCandidate(spos, this);
 
-            if (Experiment.Instance.PositionIsValid(spos, this))
+            if (CurrentTrial.PositionIsValid(spos, this))
                 transform.position = new Vector3(spos.x, spos.y, transform.position.z);
         }
         
@@ -129,16 +131,16 @@ public class Zahnrad : MonoBehaviour
     {
         get
         {
-            if (Experiment.Instance.GameBoard == null)
+            if (CurrentTrial.GameBoard == null)
                 return false;
-            return Experiment.Instance.GameBoard.Contains(transform.position.x, transform.position.y);
+            return CurrentTrial.GameBoard.Contains(transform.position.x, transform.position.y);
         }
     }
 
     private Vector2 SnapToGrid(float x, float y)
     {
-        if (Experiment.Instance.GameBoard != null)
-            return Experiment.Instance.GameBoard.SnapToGrid(x, y);
+        if (CurrentTrial.GameBoard != null)
+            return CurrentTrial.GameBoard.SnapToGrid(x, y);
         return new Vector2(x, y);
     }
 
@@ -195,8 +197,8 @@ public class Zahnrad : MonoBehaviour
         if(CursorSelected)
         {
             CursorSelected = false;
-            Experiment.Instance.ConnectCog(this);
-            Experiment.Instance.PlacementApplied(this, (Vector2)transform.position);
+            CurrentTrial.ConnectCog(this);
+            CurrentTrial.PlacementApplied(this, (Vector2)transform.position);
 
             transform.localScale = Vector3.one;
             sprite.sortingOrder = 1;
@@ -205,7 +207,7 @@ public class Zahnrad : MonoBehaviour
         {
             CursorRotating = false;
             Speed = AverageRotationSpeed;
-            Experiment.Instance.RotationApplied(this, TotalRotation);
+            CurrentTrial.RotationApplied(this, TotalRotation);
             if(!CanRotate)
                 transform.eulerAngles = PreRotationAngle;
         }
