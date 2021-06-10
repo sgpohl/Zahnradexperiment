@@ -83,6 +83,7 @@ public class Experiment : MonoBehaviour
 
     // Update is called once per frame
     private float FPS = 0;
+    private bool IsLoading = false;
     void Update()
     {
         FPS = 1.0f / Time.deltaTime;
@@ -95,7 +96,7 @@ public class Experiment : MonoBehaviour
         {
             NextTrial();
         }*/
-        if(CurrentBlock != null)
+        if(CurrentBlock != null && !IsLoading)
             CurrentBlock.Update(Time.deltaTime);
     }
 
@@ -158,6 +159,7 @@ public class Experiment : MonoBehaviour
     bool BoardLoaded = false;
     private void LoadScene(string name, bool withBoard = true)
     {
+        IsLoading = true;
         //Debug.Log("Load " + name + (withBoard ? " with board" : " without board"));
         //unload board first, if needed
         if (BoardLoaded && !withBoard)
@@ -205,6 +207,7 @@ public class Experiment : MonoBehaviour
     {
         if(TrialIsActive && !scene.name.Equals("board"))
             CurrentTrial<ITrial>().Open();
+        IsLoading = false;
     }
 
     public void EndTrial()

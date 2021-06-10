@@ -217,7 +217,6 @@ public class DirectionTrial : CogTrial
 
         long RT1 = 0;
         long RT2 = 0;
-        Direction RESP = Direction.INVALID;
         int CRESP = -1;
         for (int i = 0; i < data.Interaktionen.Count; ++i)
         {
