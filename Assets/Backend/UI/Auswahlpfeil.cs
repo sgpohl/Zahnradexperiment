@@ -37,7 +37,7 @@ public class Auswahlpfeil : MonoBehaviour
         tmp.r = 1.0f - 1.0f * progress;
         tmp.b = 1.0f - 1.0f * progress;
         tmp.g = 1.0f + 0.0f * progress;
-        tmp.a = 0.5f + 0.5f * progress;
+        tmp.a = 0.7f + 0.3f * progress;
         GetComponent<SpriteRenderer>().color = tmp;
     }
     private bool Clicked = false;
