@@ -141,7 +141,7 @@ public class CogTrial : Trial
     {
         int id = Cogs.FindIndex(c => c == cog);
         bool connected = cog.ConnectedCogs.Count > 0;
-        Experiment.Measurement.MeasureCogPlaced((int)(pos.x * 10), (int)(pos.y * 10), connected, id);
+        Experiment.Measurement.MeasureCogPlaced((int)(pos.x * 10), (int)(pos.y * 10), connected, cog.OnBoard, id);
     }
 }
 

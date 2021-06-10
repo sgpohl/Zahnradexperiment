@@ -63,8 +63,7 @@ public class Auswahlzahnrad : MonoBehaviour
 
         float h = 0.0f;
         float s = 0.0f ;
-        float v = 0.7f + 0.3f * Progress;
-        v -= otherProgress * 0.6f;
+        float v = 0.7f + 0.3f * Progress - otherProgress * 0.4f;
         GetComponent<SpriteRenderer>().color = Color.HSVToRGB(h, s, v);
     }
     private bool Clicked = false;
