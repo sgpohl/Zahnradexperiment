@@ -5,6 +5,7 @@ using UnityEngine;
 public class Auswahlpfeil : MonoBehaviour
 {
     public DirectionTrial.Direction Richtung;
+    public bool IstDieKorrekteLoesung = false;
     private bool Selected = false;
 
     private float ClickedDuration = 0.0f;
@@ -22,7 +23,7 @@ public class Auswahlpfeil : MonoBehaviour
             {
                 ClickedDuration = TargetTimeForEffect;
                 Selected = true;
-                Experiment.CurrentTrial<DirectionTrial>().SelectDirection(Richtung);
+                Experiment.CurrentTrial<DirectionTrial>().SelectDirection(Richtung, IstDieKorrekteLoesung);
             }
         }
 

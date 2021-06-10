@@ -1,21 +1,22 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.IO;
 
 public abstract class Block
 {
     public string Config { get; private set; }
-    private List<Trial> _trials;
-    public Trial CurrentTrial
+    public List<ITrial> Trials { get; private set; }
+    public ITrial CurrentTrial
     { 
         get
         {
-            if (_trials.Count == 0)
+            if (Trials.Count == 0)
                 throw new System.ArgumentOutOfRangeException("No trial loaded");
-            return _trials[_trials.Count - 1];
+            return Trials[Trials.Count - 1];
         }
     }
-    public int TrialCount { get { return _trials.Count; } }
+    public int TrialCount { get { return Trials.Count; } }
     public string NextTrialName
     {
         get { return Config + (TrialCount + 1).ToString(); }
@@ -24,13 +25,13 @@ public abstract class Block
 
     public Block()
     {
-        _trials = new List<Trial>();
+        Trials = new List<ITrial>();
     }
 
-    protected abstract Trial InstantiateTrial(string name);
+    protected abstract ITrial InstantiateTrial(string name);
     public void OpenTrial(string name)
     {
-        _trials.Add(InstantiateTrial(name));
+        Trials.Add(InstantiateTrial(name));
     }
 
     public static Block Instantiate(string name)
@@ -66,11 +67,16 @@ public abstract class Block
         if(TrialCount > 0)
             CurrentTrial.Update(DeltaTime);
     }
+
+    public virtual void Aggregate(Measurement.Block data, StreamWriter stream)
+    {
+        stream.WriteLine(data.Typ);
+    }
 }
 
 public class CogBlock : Block
 {
-    protected override Trial InstantiateTrial(string name)
+    protected override ITrial InstantiateTrial(string name)
     {
         return new CogTrial(name);
     }
@@ -78,7 +84,7 @@ public class CogBlock : Block
 
 public class SpeedBlock : Block
 {
-    protected override Trial InstantiateTrial(string name)
+    protected override ITrial InstantiateTrial(string name)
     {
         return new SpeedTrial(name);
     }
@@ -86,7 +92,7 @@ public class SpeedBlock : Block
 
 public class DirectionBlock : Block
 {
-    protected override Trial InstantiateTrial(string name)
+    protected override ITrial InstantiateTrial(string name)
     {
         return new DirectionTrial(name);
     }
@@ -94,7 +100,7 @@ public class DirectionBlock : Block
 
 public class PropellerBlock : Block
 {
-    protected override Trial InstantiateTrial(string name)
+    protected override ITrial InstantiateTrial(string name)
     {
         return new PropellerTrial(name);
     }

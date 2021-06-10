@@ -47,9 +47,9 @@ public class Measurement : MonoBehaviour
         data.Blocks.Add(b);
     }
     
-    public void newTrial(string name)
+    public void newTrial(ITrial trial)
     {
-        var t = new Trial{ Name = name };
+        var t = new Trial{ Name = trial.Name };
         if(data.Blocks.Count == 0)
             newBlock("default");
         data.Blocks[data.Blocks.Count -1].Trials.Add(t);
@@ -74,32 +74,26 @@ public class Measurement : MonoBehaviour
     public void MeasureCogPlaced(int x, int y, bool connected, bool onBoard, int id)
     {
         CurrentTrial().Interaktionen.Add(new Platzierung{x = x, y=y, ZahnradID=id, AufBrett = onBoard, Zeitpunkt = timer.ElapsedMilliseconds, verbunden = connected});
-        timer.Restart();
     }
     public void MeasureCogRotated(int dir, int id)
     {
         CurrentTrial().Interaktionen.Add(new Drehung{Richtung=dir, ZahnradID=id, Zeitpunkt=timer.ElapsedMilliseconds});
-        timer.Restart();
     }
-    public void MeasureCogSelected(int id)
+    public void MeasureCogSelected(int id, bool correct)
     {
-        CurrentTrial().Interaktionen.Add(new Zahnradauswahl { ZahnradID = id, Zeitpunkt = timer.ElapsedMilliseconds });
-        timer.Restart();
+        CurrentTrial().Interaktionen.Add(new Zahnradauswahl { ZahnradID = id, CRESP = correct, Zeitpunkt = timer.ElapsedMilliseconds });
     }
-    public void MeasureDirectionSelected(DirectionTrial.Direction dir)
+    public void MeasureDirectionSelected(DirectionTrial.Direction dir, bool correct)
     {
-        CurrentTrial().Interaktionen.Add(new Richtungsauswahl { Richtung = dir, Zeitpunkt = timer.ElapsedMilliseconds });
-        timer.Restart();
+        CurrentTrial().Interaktionen.Add(new Richtungsauswahl { Richtung = dir, CRESP = correct, Zeitpunkt = timer.ElapsedMilliseconds });
     }
     public void MeasurePropellerAttached(int id)
     {
-        CurrentTrial().Interaktionen.Add(new PropellerAngefuegt { ZahnradID = id });
-        timer.Restart();
+        CurrentTrial().Interaktionen.Add(new PropellerAngefuegt { ZahnradID = id, Zeitpunkt = timer.ElapsedMilliseconds });
     }
     public void MeasurePropellerDetached(int id)
     {
-        CurrentTrial().Interaktionen.Add(new PropellerEntfernt { ZahnradID = id });
-        timer.Restart();
+        CurrentTrial().Interaktionen.Add(new PropellerEntfernt { ZahnradID = id, Zeitpunkt = timer.ElapsedMilliseconds });
     }
 
     void SaveData(Messdaten data)
@@ -117,8 +111,22 @@ public class Measurement : MonoBehaviour
         using (var stream = new StreamWriter(new FileStream(csvPath, FileMode.Create)))
         {
             stream.WriteLine("VPN,"+data.VPN.ToString()+"\n");
-            foreach(var block in data.Blocks)
+            for(int blockIdx = 0; blockIdx < data.Blocks.Count; ++blockIdx)
             {
+                var data_block = data.Blocks[blockIdx];
+                var logic_block = Experiment.Instance.Blocks[blockIdx];
+                logic_block.Aggregate(data_block, stream);
+
+                for (int trialIdx = 0; trialIdx < data_block.Trials.Count; ++trialIdx)
+                {
+                    var data_trial = data_block.Trials[trialIdx];
+                    var logic_trial = logic_block.Trials[trialIdx];
+
+                    logic_trial.Aggregate(data_trial, stream);
+                }
+
+                stream.WriteLine("");
+                /*
                 stream.WriteLine("Block,"+block.Typ);
                 stream.WriteLine("Name,Drehungen,Platzierungen,RT1,RT2,RT3,CRESP");
                 foreach(var trial in block.Trials)
@@ -142,6 +150,7 @@ public class Measurement : MonoBehaviour
                     
                     stream.WriteLine(trial.Name+","+rotationCount.ToString()+","+placementCount.ToString()+","+RT1.ToString()+",na,"+RT3.ToString()+",na");
                 }
+                */
             }
             stream.Flush();
         }
@@ -225,11 +234,15 @@ public class Measurement : MonoBehaviour
     {
         [XmlAttribute]
         public DirectionTrial.Direction Richtung;
+        [XmlAttribute]
+        public bool CRESP;
     }
     public class Zahnradauswahl : Interaktion
     {
         [XmlAttribute]
         public int ZahnradID;
+        [XmlAttribute]
+        public bool CRESP;
     }
     public class PropellerAngefuegt : Interaktion
     {

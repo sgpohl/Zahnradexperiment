@@ -5,6 +5,7 @@ using UnityEngine;
 public class Auswahlzahnrad : MonoBehaviour
 {
     public int Size;
+    public bool IstDieKorrekteLoesung = false;
     private bool Selected = false;
 
     private float ClickedDuration = 0.0f;

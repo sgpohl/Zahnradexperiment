@@ -13,7 +13,7 @@ public class Experiment : MonoBehaviour
     private Canvas menue;
     public PlayButton ContinueButton { private get; set; }
 
-    private List<Block> Blocks;
+    public List<Block> Blocks { get; private set; }
     public static Block CurrentBlock
     {
         get
@@ -204,12 +204,12 @@ public class Experiment : MonoBehaviour
     private void InitScene(Scene scene, LoadSceneMode mode)
     {
         if(TrialIsActive && !scene.name.Equals("board"))
-            CurrentTrial<Trial>().Open();
+            CurrentTrial<ITrial>().Open();
     }
 
     public void EndTrial()
     {
-        CurrentTrial<Trial>().Close();
+        CurrentTrial<ITrial>().Close();
     }
 
     private void EndBlock()

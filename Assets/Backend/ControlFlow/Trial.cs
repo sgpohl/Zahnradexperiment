@@ -1,13 +1,14 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.IO;
 
-public abstract class Trial
+public abstract class ITrial
 {
     protected bool IsLoaded = false;
     public string Name { get; private set; }
 
-    public Trial(string name)
+    public ITrial(string name)
     {
         Name = name;
     }
@@ -20,14 +21,19 @@ public abstract class Trial
     {
         IsLoaded = true;
 
-        Experiment.Measurement.newTrial(Name);
+        Experiment.Measurement.newTrial(this);
     }
     public virtual void Close()
     {
     }
+
+    public virtual void Aggregate(Measurement.Trial data, StreamWriter stream)
+    {
+
+    }
 }
 
-public class CogTrial : Trial
+public class CogTrial : ITrial
 {
     protected List<Zahnrad> Cogs;
     public Spielbrett GameBoard { get; private set; }
@@ -144,9 +150,34 @@ public class CogTrial : Trial
         Experiment.Measurement.MeasureCogPlaced((int)(pos.x * 10), (int)(pos.y * 10), connected, cog.OnBoard, id);
     }
 }
-
+//verschiebungen
 public class SpeedTrial : CogTrial
 {
+    public override void Aggregate(Measurement.Trial data, StreamWriter stream)
+    {
+        stream.WriteLine("RT-Erstauswahl,RT-LetzteWahl,CRESP");
+
+        long RT1 = 0;
+        long RT2 = 0;
+        int CRESP = -1;
+        for (int i = 0; i < data.Interaktionen.Count; ++i)
+        {
+            if (data.Interaktionen[i] is Measurement.Zahnradauswahl)
+            {
+                if (RT1 == 0)
+                    RT1 = data.Interaktionen[i].Zeitpunkt;
+                RT2 = data.Interaktionen[i].Zeitpunkt;
+                CRESP = (data.Interaktionen[i] as Measurement.Zahnradauswahl).CRESP ? 1 : 0;
+            }
+        }
+
+        stream.WriteLine(RT1.ToString() + ","+RT2.ToString()+"," + CRESP.ToString());
+    }
+
+    /* *
+     * LOGIC
+     * */
+    
     public SpeedTrial(string name) : base(name)
     {
     }
@@ -174,16 +205,43 @@ public class SpeedTrial : CogTrial
     public void SelectCog(Auswahlzahnrad selector)
     {
         SelectedCog = selector;
-        Experiment.Measurement.MeasureCogSelected(CogSelectors.FindIndex(c => c == selector));
+        Experiment.Measurement.MeasureCogSelected(CogSelectors.FindIndex(c => c == selector), selector.IstDieKorrekteLoesung);
     }
 }
 
 public class DirectionTrial : CogTrial
 {
+    public override void Aggregate(Measurement.Trial data, StreamWriter stream)
+    {
+        stream.WriteLine("RT-Erstauswahl,RT-LetzteWahl,CRESP");
+
+        long RT1 = 0;
+        long RT2 = 0;
+        Direction RESP = Direction.INVALID;
+        int CRESP = -1;
+        for (int i = 0; i < data.Interaktionen.Count; ++i)
+        {
+            if (data.Interaktionen[i] is Measurement.Richtungsauswahl)
+            {
+                if (RT1 == 0)
+                    RT1 = data.Interaktionen[i].Zeitpunkt;
+                RT2 = data.Interaktionen[i].Zeitpunkt;
+                CRESP = (data.Interaktionen[i] as Measurement.Richtungsauswahl).CRESP ? 1 : 0;
+            }
+        }
+
+        stream.WriteLine(RT1.ToString() + "," + RT2.ToString() + "," + CRESP.ToString());
+    }
+
+    /* *
+     * LOGIC
+     * */
+    
     public enum Direction
     {
         CCW = -1,
-        CW = 1
+        CW = 1,
+        INVALID = 0
     }
 
     public DirectionTrial(string name) : base(name)
@@ -191,15 +249,60 @@ public class DirectionTrial : CogTrial
     }
 
     public Direction SelectedDirection { get; private set; }
-    public void SelectDirection(Direction dir)
+    public void SelectDirection(Direction dir, bool correct)
     {
         SelectedDirection = dir;
-        Experiment.Measurement.MeasureDirectionSelected(dir);
+        Experiment.Measurement.MeasureDirectionSelected(dir, correct);
     }
 }
 
 public class PropellerTrial : CogTrial
 {
+    public override void Aggregate(Measurement.Trial data, StreamWriter stream)
+    {
+        stream.WriteLine("RT-Erstplatzierung,RT-Propeller1,RT-Propeller2,Platzierungen,Drehungen,CRESP");
+
+        long RT1 = 0; //erstes mal reingezogen
+        long RT2 = 0; //erster propeller
+        long RT3 = 0; //erstes mal 2 propeller
+        int placements = 0;
+        int rotations = 0;
+        int propeller_placed = 0;
+        for (int i = 0; i < data.Interaktionen.Count; ++i)
+        {
+            if (data.Interaktionen[i] is Measurement.Platzierung)
+            {
+                placements++;
+                var p = data.Interaktionen[i] as Measurement.Platzierung;
+                if (RT1 == 0 && p.AufBrett)
+                    RT1 = p.Zeitpunkt;
+            }
+            if (data.Interaktionen[i] is Measurement.Drehung)
+            {
+                rotations++;
+            }
+            if (data.Interaktionen[i] is Measurement.PropellerAngefuegt)
+            {
+                propeller_placed++;
+                var p = data.Interaktionen[i] as Measurement.PropellerAngefuegt;
+                if (RT2 == 0)
+                    RT2 = p.Zeitpunkt;
+                if(RT3 == 0 && propeller_placed == 2)
+                    RT3 = p.Zeitpunkt;
+            }
+            if (data.Interaktionen[i] is Measurement.PropellerEntfernt)
+            {
+                propeller_placed--;
+            }
+        }
+        int CRESP = -1; //TODO
+
+        stream.WriteLine(RT1.ToString() + "," + RT2.ToString() + "," + RT3.ToString() + "," + placements.ToString() + "," + rotations.ToString() + "," + CRESP.ToString());
+    }
+
+    /* *
+     * LOGIC
+     * */
     public PropellerTrial(string name) : base(name)
     {
     }
