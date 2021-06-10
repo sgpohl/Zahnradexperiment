@@ -8,7 +8,7 @@ public class Auswahlzahnrad : MonoBehaviour
     private bool Selected = false;
 
     private float ClickedDuration = 0.0f;
-    private const float TargetTimeForEffect = 0.2f;
+    private const float TargetTimeForEffect = 0.1f;
 
     public float Progress { get { return ClickedDuration / TargetTimeForEffect;  } }
 
