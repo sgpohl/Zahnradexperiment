@@ -6,10 +6,10 @@ using UnityEngine.SceneManagement;
 public class Experiment : MonoBehaviour
 {
     public static Experiment Instance { get; private set; }
-    
-    private System.Diagnostics.Stopwatch timer;
 
-    public Measurement measurement;
+    public Measurement _measurement;
+    public static Measurement Measurement { get { return Experiment.Instance._measurement; } }
+
     private Canvas menue;
     public PlayButton ContinueButton { private get; set; }
 
@@ -43,11 +43,9 @@ public class Experiment : MonoBehaviour
         }
 
         Instance = this;
-        
-        timer = new System.Diagnostics.Stopwatch();
+
         Blocks = new List<Block>();
-        
-        measurement = gameObject.AddComponent(typeof(Measurement)) as Measurement;
+        _measurement = gameObject.AddComponent(typeof(Measurement)) as Measurement;
 
         //ExperimentConfig.Load("config.xml");
 
@@ -59,7 +57,7 @@ public class Experiment : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        measurement.Init(0, "default");
+        Measurement.Init(0);
 
         //LoadScene("instructions");
     }
@@ -73,42 +71,24 @@ public class Experiment : MonoBehaviour
         Debug.Log(winPath);
     }
 
-    private string trialPrefix = null;
-    private int trialNum = 0;
     public void StartBlock(string name)
     {
-        trialPrefix = name;
-        trialNum = 0;
-
         Blocks.Add(Block.Instantiate(name));
 
         LoadScene(name+"_instructions", false);
         menue.enabled = false;
-        Debug.Log("start "+name+ "  "+ SceneManager.GetActiveScene().buildIndex.ToString());
-        measurement.newBlock(name);
         ContinueButton.Activate();
+        //Debug.Log("start "+name+ "  "+ SceneManager.GetActiveScene().buildIndex.ToString());
     }
 
     // Update is called once per frame
-    private bool measuring = false;
     private float FPS = 0;
     void Update()
     {
         FPS = 1.0f / Time.deltaTime;
-        if (Input.GetMouseButtonUp(1))
-            if(measuring)
-            {
-                timer.Stop();
-                measuring = false;
-            }
-            else
-            {
-                timer.Restart();
-                measuring = true;
-            }
         if (Input.GetKey("escape"))
         {
-            measurement.Finish();
+            Measurement.Finish();
             Application.Quit();
         }
         /*if (Input.GetKeyUp("space") && trialPrefix != null)
@@ -121,32 +101,27 @@ public class Experiment : MonoBehaviour
 
     public void NextTrial()
     {
-        trialNum++;
-
         if(TrialIsActive)
             EndTrial();
-        if (!IsValidTrial(trialNum))
+        if (!IsValidTrial( CurrentBlock.NextTrialName ))
         {
-            //Debug.Log("invalid: " + trialPrefix + trialNum.ToString());
-            //trialNum = 1;
             //LoadScene("debriefing");
             EndBlock();
         }
         else
         {
-            CurrentBlock.OpenTrial();
-            var name = trialPrefix + trialNum.ToString();
-            LoadScene(name);
-            measurement.newTrial(name);
+            string name = CurrentBlock.NextTrialName;
+            CurrentBlock.OpenTrial( name );
+            LoadScene( name );
         }
     }
 
-    private bool IsValidTrial(int idx)
+    private bool IsValidTrial(string name)
     {
         for (var i = 0; i < SceneManager.sceneCountInBuildSettings; i++)
         {
             string x = SceneUtility.GetScenePathByBuildIndex(i);
-            if (x.Contains("/"+ trialPrefix + idx.ToString() + ".unity"))
+            if (x.Contains("/"+ name + ".unity"))
                 return true;
         }
         return false;
@@ -166,8 +141,8 @@ public class Experiment : MonoBehaviour
         int parsedNum;
         bool valid = int.TryParse(vpn, out parsedNum);
         if (valid)
-            measurement.VPN_Num = parsedNum;
-        Debug.Log("VPN: " + measurement.VPN_Num.ToString());
+            Measurement.VPN_Num = parsedNum;
+        Debug.Log("VPN: " + Measurement.VPN_Num.ToString());
     }
 
     /* IDX
@@ -228,7 +203,7 @@ public class Experiment : MonoBehaviour
 
     private void InitScene(Scene scene, LoadSceneMode mode)
     {
-        if(TrialIsActive)
+        if(TrialIsActive && !scene.name.Equals("board"))
             CurrentTrial<Trial>().Open();
     }
 
@@ -242,7 +217,6 @@ public class Experiment : MonoBehaviour
         //Debug.Log("EndBlock: " + trialPrefix);
         LoadScene(null, false);
         menue.enabled = true;
-        trialPrefix = null;
         ContinueButton.Deactivate();
     }
 }

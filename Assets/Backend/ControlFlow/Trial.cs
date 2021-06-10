@@ -5,6 +5,12 @@ using UnityEngine;
 public abstract class Trial
 {
     protected bool IsLoaded = false;
+    public string Name { get; private set; }
+
+    public Trial(string name)
+    {
+        Name = name;
+    }
 
     public virtual void Update(float DeltaTime)
     {
@@ -13,6 +19,8 @@ public abstract class Trial
     public virtual void Open()
     {
         IsLoaded = true;
+
+        Experiment.Measurement.newTrial(Name);
     }
     public virtual void Close()
     {
@@ -21,8 +29,12 @@ public abstract class Trial
 
 public class CogTrial : Trial
 {
-    private List<Zahnrad> Cogs;
+    protected List<Zahnrad> Cogs;
     public Spielbrett GameBoard { get; private set; }
+
+    public CogTrial(string name) : base(name)
+    {
+    }
 
     public override void Update(float DeltaTime)
     {
@@ -54,11 +66,11 @@ public class CogTrial : Trial
         base.Open();
     }
 
-    public void RegisterCog(Zahnrad cog)
+    public virtual void RegisterCog(Zahnrad cog)
     {
         Cogs.Add(cog);
         ConnectCog(cog);
-        Experiment.Instance.measurement.SaveCogInfo(Cogs.Count - 1, cog.Size);
+        Experiment.Measurement.SaveCogInfo(Cogs.Count - 1, cog.Size);
     }
 
     public void ConnectCog(Zahnrad cog)
@@ -123,19 +135,47 @@ public class CogTrial : Trial
     public void RotationApplied(Zahnrad cog, float speed)
     {
         int id = Cogs.FindIndex(c => c == cog);
-        Experiment.Instance.measurement.MeasureCogRotated((int)speed, id);
+        Experiment.Measurement.MeasureCogRotated((int)speed, id);
     }
     public void PlacementApplied(Zahnrad cog, Vector2 pos)
     {
         int id = Cogs.FindIndex(c => c == cog);
         bool connected = cog.ConnectedCogs.Count > 0;
-        Experiment.Instance.measurement.MeasureCogPlaced((int)(pos.x * 10), (int)(pos.y * 10), connected, id);
+        Experiment.Measurement.MeasureCogPlaced((int)(pos.x * 10), (int)(pos.y * 10), connected, id);
     }
 }
 
 public class SpeedTrial : CogTrial
 {
+    public SpeedTrial(string name) : base(name)
+    {
+    }
 
+    public List<Auswahlzahnrad> CogSelectors { get; private set; }
+    public override void Open()
+    {
+        CogSelectors = new List<Auswahlzahnrad>();
+        base.Open();
+    }
+
+    public override void RegisterCog(Zahnrad cog)
+    {
+        Cogs.Add(cog);
+        ConnectCog(cog);
+    }
+
+    public void RegisterCogSelector(Auswahlzahnrad selector)
+    {
+        CogSelectors.Add(selector);
+        Experiment.Measurement.SaveCogInfo(CogSelectors.Count - 1, selector.Size);
+    }
+
+    public Auswahlzahnrad SelectedCog { get; private set; }
+    public void SelectCog(Auswahlzahnrad selector)
+    {
+        SelectedCog = selector;
+        Experiment.Measurement.MeasureCogSelected(CogSelectors.FindIndex(c => c == selector));
+    }
 }
 
 public class DirectionTrial : CogTrial
@@ -146,10 +186,14 @@ public class DirectionTrial : CogTrial
         CW = 1
     }
 
+    public DirectionTrial(string name) : base(name)
+    {
+    }
+
     public Direction SelectedDirection { get; private set; }
     public void SelectDirection(Direction dir)
     {
         SelectedDirection = dir;
-        //TODO: measurement
+        Experiment.Measurement.MeasureDirectionSelected(dir);
     }
 }

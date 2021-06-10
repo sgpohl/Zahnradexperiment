@@ -4,6 +4,7 @@ using UnityEngine;
 
 public abstract class Block
 {
+    public string Config { get; private set; }
     private List<Trial> _trials;
     public Trial CurrentTrial
     { 
@@ -15,35 +16,49 @@ public abstract class Block
         }
     }
     public int TrialCount { get { return _trials.Count; } }
+    public string NextTrialName
+    {
+        get { return Config + (TrialCount + 1).ToString(); }
+    }
+    
 
     public Block()
     {
         _trials = new List<Trial>();
     }
 
-    protected abstract Trial InstantiateTrial();
-    public void OpenTrial()
+    protected abstract Trial InstantiateTrial(string name);
+    public void OpenTrial(string name)
     {
-        _trials.Add(InstantiateTrial());
+        _trials.Add(InstantiateTrial(name));
     }
 
     public static Block Instantiate(string name)
     {
-        switch(name)
+        Experiment.Measurement.newBlock(name);
+        Block b;
+        switch (name)
         {
             case "carousel":
-                return new CogBlock();
+                b = new CogBlock();
+                break;
             case "propeller":
-                return new CogBlock();
+                b = new CogBlock();
+                break;
             case "speed":
-                return new SpeedBlock();
+                b = new SpeedBlock();
+                break;
             case "training":
-                return new CogBlock();
+                b = new CogBlock();
+                break;
             case "direction":
-                return new DirectionBlock();
+                b = new DirectionBlock();
+                break;
             default:
                 throw new System.ArgumentException("Tried to instantiate a block with an unknown type: '" + name + "'");
         }
+        b.Config = name;
+        return b;
     }
 
     public void Update(float DeltaTime)
@@ -55,24 +70,24 @@ public abstract class Block
 
 public class CogBlock : Block
 {
-    protected override Trial InstantiateTrial()
+    protected override Trial InstantiateTrial(string name)
     {
-        return new CogTrial();
+        return new CogTrial(name);
     }
 }
 
 public class SpeedBlock : Block
 {
-    protected override Trial InstantiateTrial()
+    protected override Trial InstantiateTrial(string name)
     {
-        return new SpeedTrial();
+        return new SpeedTrial(name);
     }
 }
 
 public class DirectionBlock : Block
 {
-    protected override Trial InstantiateTrial()
+    protected override Trial InstantiateTrial(string name)
     {
-        return new DirectionTrial();
+        return new DirectionTrial(name);
     }
 }

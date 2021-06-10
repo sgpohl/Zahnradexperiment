@@ -8,8 +8,9 @@ public class Auswahlzahnrad : MonoBehaviour
     private bool Selected = false;
 
     private float ClickedDuration = 0.0f;
-    private const float TargetTimeForEffect = 0.1f;
+    private const float TargetTimeForEffect = 0.2f;
 
+    public float Progress { get { return ClickedDuration / TargetTimeForEffect;  } }
 
     void Awake()
     {
@@ -23,7 +24,7 @@ public class Auswahlzahnrad : MonoBehaviour
     }
     void Start()
     {
-        //Experiment.Instance.RegisterCog(this);
+        Experiment.CurrentTrial<SpeedTrial>().RegisterCogSelector(this);
     }
 
     void Update()
@@ -37,23 +38,34 @@ public class Auswahlzahnrad : MonoBehaviour
             {
                 ClickedDuration = TargetTimeForEffect;
                 Selected = true;
-                //Experiment.Instance.SelectCog(this);
+                Experiment.CurrentTrial<SpeedTrial>().SelectCog(this);
             }
         }
 
-        //if (Selected && Experiment.Instance.SelectedCog != this)
-        //    Deselect();
+        bool OtherSelected = (Experiment.CurrentTrial<SpeedTrial>().SelectedCog != this && Experiment.CurrentTrial<SpeedTrial>().SelectedCog != null);
+        if (Selected && OtherSelected)
+            Deselect();
 
         if (!Clicked && !Selected)
             ClickedDuration = 0.0f;
 
-        float progress = ClickedDuration / TargetTimeForEffect;
-        Color tmp = GetComponent<SpriteRenderer>().color;
-        tmp.r = 1.0f - 1.0f * progress;
-        tmp.b = 1.0f - 1.0f * progress;
-        tmp.g = 1.0f + 0.0f * progress;
-        tmp.a = 0.5f + 0.5f * progress;
-        GetComponent<SpriteRenderer>().color = tmp;
+
+        float otherProgress = 0.0f;
+        foreach(Auswahlzahnrad other in Experiment.CurrentTrial<SpeedTrial>().CogSelectors)
+        {
+            if (other == this)
+                continue;
+            if (other.Progress > otherProgress)
+                otherProgress = other.Progress;
+            if (other == Experiment.CurrentTrial<SpeedTrial>().SelectedCog)
+                otherProgress = 1.0f-Progress;
+        }
+
+        float h = 0.0f;
+        float s = 0.0f ;
+        float v = 0.7f + 0.3f * Progress;
+        v -= otherProgress * 0.6f;
+        GetComponent<SpriteRenderer>().color = Color.HSVToRGB(h, s, v);
     }
     private bool Clicked = false;
     void OnMouseDown()

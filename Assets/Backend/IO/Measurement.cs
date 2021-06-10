@@ -31,11 +31,10 @@ public class Measurement : MonoBehaviour
         timer = new System.Diagnostics.Stopwatch();
     }
     
-    public void Init(int VPN, string config)
+    public void Init(int VPN)
     {
         data = new Messdaten();
         data.VPN = VPN;
-        data.Konfiguration = config;
     }
     public void Finish()
     {
@@ -82,7 +81,17 @@ public class Measurement : MonoBehaviour
         CurrentTrial().Interaktionen.Add(new Drehung{Richtung=dir, ZahnradID=id, Zeitpunkt=timer.ElapsedMilliseconds});
         timer.Restart();
     }
-    
+    public void MeasureCogSelected(int id)
+    {
+        CurrentTrial().Interaktionen.Add(new Zahnradauswahl { ZahnradID = id, Zeitpunkt = timer.ElapsedMilliseconds });
+        timer.Restart();
+    }
+    public void MeasureDirectionSelected(DirectionTrial.Direction dir)
+    {
+        CurrentTrial().Interaktionen.Add(new Richtungsauswahl { Richtung = dir, Zeitpunkt = timer.ElapsedMilliseconds });
+        timer.Restart();
+    }
+
     void SaveData(Messdaten data)
     {
         string xmlPath = Path.Combine(Application.persistentDataPath, "VPN"+data.VPN.ToString()+".xml"); 
@@ -97,7 +106,7 @@ public class Measurement : MonoBehaviour
 
         using (var stream = new StreamWriter(new FileStream(csvPath, FileMode.Create)))
         {
-            stream.WriteLine("VPN,"+data.VPN.ToString()+"\nKonfiguration,"+data.Konfiguration+"\n");
+            stream.WriteLine("VPN,"+data.VPN.ToString()+"\n");
             foreach(var block in data.Blocks)
             {
                 stream.WriteLine("Block,"+block.Typ);
@@ -131,7 +140,6 @@ public class Measurement : MonoBehaviour
     public class Messdaten
     {
         public int VPN;
-        public string Konfiguration;
         public List<Block> Blocks;
         public Messdaten()
         {
@@ -170,7 +178,12 @@ public class Measurement : MonoBehaviour
         public int Zaehne;
     }
     
-    [XmlInclude(typeof(Platzierung)), XmlInclude(typeof(Drehung))]
+    [   
+        XmlInclude(typeof(Platzierung)), 
+        XmlInclude(typeof(Drehung)), 
+        XmlInclude(typeof(Richtungsauswahl)), 
+        XmlInclude(typeof(Zahnradauswahl))
+    ]
     public abstract class Interaktion
     {
         [XmlAttribute]
@@ -193,5 +206,15 @@ public class Measurement : MonoBehaviour
         public int ZahnradID;
         [XmlAttribute]
         public int Richtung;
+    }
+    public class Richtungsauswahl : Interaktion
+    {
+        [XmlAttribute]
+        public DirectionTrial.Direction Richtung;
+    }
+    public class Zahnradauswahl : Interaktion
+    {
+        [XmlAttribute]
+        public int ZahnradID;
     }
 }
