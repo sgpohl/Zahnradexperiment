@@ -91,6 +91,16 @@ public class Measurement : MonoBehaviour
         CurrentTrial().Interaktionen.Add(new Richtungsauswahl { Richtung = dir, Zeitpunkt = timer.ElapsedMilliseconds });
         timer.Restart();
     }
+    public void MeasurePropellerAttached(int id)
+    {
+        CurrentTrial().Interaktionen.Add(new PropellerAngefuegt { ZahnradID = id });
+        timer.Restart();
+    }
+    public void MeasurePropellerDetached(int id)
+    {
+        CurrentTrial().Interaktionen.Add(new PropellerEntfernt { ZahnradID = id });
+        timer.Restart();
+    }
 
     void SaveData(Messdaten data)
     {
@@ -182,7 +192,9 @@ public class Measurement : MonoBehaviour
         XmlInclude(typeof(Platzierung)), 
         XmlInclude(typeof(Drehung)), 
         XmlInclude(typeof(Richtungsauswahl)), 
-        XmlInclude(typeof(Zahnradauswahl))
+        XmlInclude(typeof(Zahnradauswahl)),
+        XmlInclude(typeof(PropellerAngefuegt)),
+        XmlInclude(typeof(PropellerEntfernt))
     ]
     public abstract class Interaktion
     {
@@ -215,6 +227,16 @@ public class Measurement : MonoBehaviour
         public DirectionTrial.Direction Richtung;
     }
     public class Zahnradauswahl : Interaktion
+    {
+        [XmlAttribute]
+        public int ZahnradID;
+    }
+    public class PropellerAngefuegt : Interaktion
+    {
+        [XmlAttribute]
+        public int ZahnradID;
+    }
+    public class PropellerEntfernt : Interaktion
     {
         [XmlAttribute]
         public int ZahnradID;

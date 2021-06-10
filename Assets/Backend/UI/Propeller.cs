@@ -85,6 +85,7 @@ public class Propeller : MonoBehaviour
             transform.localScale = baseScale * 1.15f;
 
             sprite.sortingOrder = 4;
+
         }
     }
 
@@ -99,11 +100,14 @@ public class Propeller : MonoBehaviour
             baseRotation = this.transform.rotation;
             if (AttachedTo != null)
                 baseRotation *= Quaternion.Inverse(AttachedTo.transform.rotation);
+
+            Experiment.CurrentTrial<PropellerTrial>().AttachPropeller(AttachedTo);
         }
     }
 
     private void Disconnect()
     {
-
+        Experiment.CurrentTrial<PropellerTrial>().DetachPropeller(AttachedTo);
+        AttachedTo = null;
     }
 }

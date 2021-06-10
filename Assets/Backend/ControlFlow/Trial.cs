@@ -197,3 +197,25 @@ public class DirectionTrial : CogTrial
         Experiment.Measurement.MeasureDirectionSelected(dir);
     }
 }
+
+public class PropellerTrial : CogTrial
+{
+    public PropellerTrial(string name) : base(name)
+    {
+    }
+
+    public void AttachPropeller(Zahnrad AttachedTo)
+    {
+        if (AttachedTo == null)
+            return;
+        AttachedTo.IsTarget = true;
+        Experiment.Measurement.MeasurePropellerAttached(Cogs.FindIndex(c => c == AttachedTo));
+    }
+    public void DetachPropeller(Zahnrad DetachedFrom)
+    {
+        if (DetachedFrom == null)
+            return;
+        DetachedFrom.IsTarget = false;
+        Experiment.Measurement.MeasurePropellerDetached(Cogs.FindIndex(c => c == DetachedFrom));
+    }
+}

@@ -43,7 +43,7 @@ public abstract class Block
                 b = new CogBlock();
                 break;
             case "propeller":
-                b = new CogBlock();
+                b = new PropellerBlock();
                 break;
             case "speed":
                 b = new SpeedBlock();
@@ -89,5 +89,13 @@ public class DirectionBlock : Block
     protected override Trial InstantiateTrial(string name)
     {
         return new DirectionTrial(name);
+    }
+}
+
+public class PropellerBlock : Block
+{
+    protected override Trial InstantiateTrial(string name)
+    {
+        return new PropellerTrial(name);
     }
 }
