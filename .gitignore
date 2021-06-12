@@ -29,3 +29,9 @@ Packages/packages-lock.json
 Packages/manifest.json
 *.pdb
 *.dll
+obj/Debug/Assembly-CSharp.pdb
+obj/Debug/Assembly-CSharp.dll
+.vs/Zahnradexperiment/v15/Server/sqlite3/storage.ide-wal
+.vs/Zahnradexperiment/v15/Server/sqlite3/storage.ide-shm
+.vs/Zahnradexperiment/v15/Server/sqlite3/storage.ide
+.vs/Zahnradexperiment/v15/.suo
