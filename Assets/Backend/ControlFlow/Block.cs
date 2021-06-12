@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.IO;
+using System.Text;
 
 public abstract class Block
 {
@@ -76,10 +77,10 @@ public abstract class Block
 
     public virtual string Aggregate(Measurement.Block data)
     {
-        string returnString = data.Typ;
+        var returnString = new StringBuilder(data.Typ);
         foreach (var trial in Trials)
-            returnString += "\n" + trial.resultsString;
-        return returnString;
+            returnString.AppendFormat("\n{0}", trial.ToString(","));
+        return returnString.ToString();
     }
 }
 

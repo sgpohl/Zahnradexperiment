@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 public abstract class ITrial
 {
@@ -12,6 +13,7 @@ public abstract class ITrial
     public ITrial(string name)
     {
         Name = name;
+        results = new List<StringBuilder>();
     }
 
     public virtual void Update(float DeltaTime)
@@ -27,13 +29,24 @@ public abstract class ITrial
     public void Close()
     {
         Experiment.Measurement.MeasureTrialFinished();
-        resultsString = Aggregate(Experiment.Measurement.CurrentTrial);
+        Aggregate(Experiment.Measurement.CurrentTrial);
     }
 
-    public string resultsString { get; private set; }
-    public virtual string Aggregate(Measurement.Trial data)
+    public List<StringBuilder> results { get; protected set; }
+    public virtual void Aggregate(Measurement.Trial data)
     {
-        return "";
+    }
+
+    public string ToString(string prefix)
+    {
+        var all = new StringBuilder();
+        foreach(var line in results)
+            all.AppendFormat("{0}{1}\n", prefix, line);
+        return all.ToString();
+    }
+    public override string ToString()
+    {
+        return ToString("");
     }
 }
 
@@ -154,9 +167,9 @@ public class CogTrial : ITrial
 
 public class SpeedTrial : CogTrial
 {
-    public override string Aggregate(Measurement.Trial data)
+    public override void Aggregate(Measurement.Trial data)
     {
-        string returnString = "RT-Erstauswahl,RT-LetzteWahl,RT-Gesamt,AnzahlSelektionen,RESP-Typ,CRESP\n";
+        results.Add(new StringBuilder("RT-Erstauswahl,RT-LetzteWahl,RT-Gesamt,AnzahlSelektionen,RESP-Typ,CRESP"));
 
         long RT1 = 0;
         long RT2 = 0;
@@ -177,8 +190,9 @@ public class SpeedTrial : CogTrial
         }
         int RESP = data.Zahnraeder[RESP_ID].Zaehne;
 
-        returnString += RT1.ToString() + "," + RT2.ToString() + "," + data.Dauer.ToString() + "," + clicks.ToString() + "," + RESP.ToString() + "," + CRESP.ToString();
-        return returnString;
+        var z2 = new StringBuilder();
+        z2.AppendFormat("{0},{1},{2},{3},{4},{5}", RT1, RT2, data.Dauer, clicks, RESP, CRESP);
+        results.Add(z2);
     }
 
     /* *
@@ -218,9 +232,9 @@ public class SpeedTrial : CogTrial
 
 public class DirectionTrial : CogTrial
 {
-    public override string Aggregate(Measurement.Trial data)
+    public override void Aggregate(Measurement.Trial data)
     {
-        string returnString = "RT-Erstauswahl,RT-LetzteWahl,RT-Gesamt,AnzahlSelektionen,RESP,CRESP\n";
+        results.Add(new StringBuilder("RT-Erstauswahl,RT-LetzteWahl,RT-Gesamt,AnzahlSelektionen,RESP,CRESP"));
 
         long RT1 = 0;
         long RT2 = 0;
@@ -240,8 +254,9 @@ public class DirectionTrial : CogTrial
             }
         }
 
-        returnString += RT1.ToString() + "," + RT2.ToString() + "," + data.Dauer.ToString() + "," + clicks.ToString()+ "," + RESP.ToString() + "," + CRESP.ToString();
-        return returnString;
+        var z2 = new StringBuilder();
+        z2.AppendFormat("{0},{1},{2},{3},{4},{5}", RT1, RT2, data.Dauer, clicks, RESP, CRESP);
+        results.Add(z2);
     }
 
     /* *
@@ -269,9 +284,9 @@ public class DirectionTrial : CogTrial
 
 public class PropellerTrial : CogTrial
 {
-    public override string Aggregate(Measurement.Trial data)
+    public override void Aggregate(Measurement.Trial data)
     {
-        string returnString = "RT-Erstplatzierung,RT-Propeller1,RT-Propeller2,RT-Gesamt,Platzierungen,Drehungen,Propeller1,Propeller2,Geschwindigkeit,PropellerKontakt\n";
+        results.Add(new StringBuilder("RT-Erstplatzierung,RT-Propeller1,RT-Propeller2,RT-Gesamt,Platzierungen,Drehungen,Propeller1,Propeller2,Geschwindigkeit,PropellerKontakt"));
 
         long RT1 = 0; //erstes mal reingezogen
         long RT2 = 0; //erster propeller
@@ -349,9 +364,74 @@ public class PropellerTrial : CogTrial
         else
             propeller_intersect = 0;
 
-        returnString += RT1.ToString() + "," + RT2.ToString() + "," + RT3.ToString() + "," + data.Dauer.ToString() + "," + placements.ToString() + "," + rotations.ToString();
-        returnString += "," + P[0].ToString() + "," + P[1].ToString() + "," + speed.ToString() + "," + propeller_intersect.ToString() ;
-        return returnString;
+        var _z2 = new StringBuilder();
+        _z2.AppendFormat("{0},{1},{2},{3},{4},{5}", RT1, RT2, RT3, data.Dauer, placements, rotations);
+        _z2.AppendFormat(",{0},{1},{2},{3}", P[0], P[1], speed, propeller_intersect);
+        results.Add(_z2);
+        results.Add(new StringBuilder());
+        results.Add(new StringBuilder("Interaktionen"));
+
+        StringBuilder z1 = new StringBuilder("Typ");
+        StringBuilder z2 = new StringBuilder("RT");
+        StringBuilder z3 = new StringBuilder("Start-Ziel");
+        StringBuilder z4 = new StringBuilder("Kettenlaenge");
+
+        bool[] PreviouslyOnBoard = new bool[data.Zahnraeder.Count];
+        Measurement.Interaktion LastInteraction = null;
+        for (int i = 0; i < data.Interaktionen.Count; ++i)
+        {
+            if (data.Interaktionen[i] is Measurement.PropellerAngefuegt)
+            {
+                z1.Append(",Propeller");
+                z2.AppendFormat(",{0}", data.Interaktionen[i].Zeitpunkt);
+                if (LastInteraction != null && LastInteraction is Measurement.PropellerEntfernt)
+                    z3.AppendFormat(",{0}", "umgelegt");
+                else
+                    z3.AppendFormat(",{0}", "angelegt");
+                z4.Append(",");
+            } else if(LastInteraction is Measurement.PropellerEntfernt)
+            {
+                z1.Append(",Propeller");
+                z2.AppendFormat(",{0}", LastInteraction.Zeitpunkt);
+                z3.AppendFormat(",{0}", "entfernt");
+                z4.Append(",");
+            }
+
+            if (data.Interaktionen[i] is Measurement.Platzierung)
+            {
+                var p = data.Interaktionen[i] as Measurement.Platzierung;
+                if (!PreviouslyOnBoard[p.ZahnradID] && !p.AufBrett)
+                    continue;
+
+                z1.Append(",Platzierung");
+                z2.AppendFormat(",{0}", p.Zeitpunkt);
+
+                if (!PreviouslyOnBoard[p.ZahnradID] && p.AufBrett)
+                    z3.Append(",rein");
+                else if (PreviouslyOnBoard[p.ZahnradID] && p.AufBrett)
+                    z3.Append(",innerhalb");
+                else
+                    z3.Append(",raus");
+
+                z4.Append(",");
+
+                PreviouslyOnBoard[p.ZahnradID] = p.AufBrett;
+            }
+            if (data.Interaktionen[i] is Measurement.Drehung)
+            {
+                var d = data.Interaktionen[i] as Measurement.Drehung;
+
+                z1.Append(",Drehung");
+                z2.AppendFormat(",{0}", d.Zeitpunkt);
+                z3.Append(",");
+                z4.AppendFormat(",{0}", Cogs[d.ZahnradID].System.Size);
+            }
+            LastInteraction = data.Interaktionen[i];
+        }
+        results.Add(z1);
+        results.Add(z2);
+        results.Add(z3);
+        results.Add(z4);
     }
 
     /* *
@@ -387,9 +467,9 @@ public class PropellerTrial : CogTrial
 
 public class CarouselTrial : CogTrial
 {
-    public override string Aggregate(Measurement.Trial data)
+    public override void Aggregate(Measurement.Trial data)
     {
-        string returnString = "RT-Erstplatzierung,RT-Gesamt,Platzierungen,Drehungen,RESP,RESP-Distanz\n";
+        results.Add(new StringBuilder("RT-Erstplatzierung,RT-Gesamt,Platzierungen,Drehungen,RESP,RESP-Distanz"));
 
         long RT1 = 0; //erstes mal reingezogen
         int placements = 0;
@@ -435,9 +515,54 @@ public class CarouselTrial : CogTrial
                 RESP = 0;
         }
 
+        var _z2 = new StringBuilder();
+        _z2.AppendFormat("{0},{1},{2},{3},{4},{5}", RT1, data.Dauer, placements, rotations, RESP, distance);
+        results.Add(_z2);
+        results.Add(new StringBuilder());
+        results.Add(new StringBuilder("Interaktionen"));
 
-        returnString += RT1.ToString() + "," + data.Dauer.ToString() + "," + placements.ToString() + "," + rotations.ToString() + "," + RESP.ToString()+","+distance.ToString();
-        return returnString;
+        StringBuilder z1 = new StringBuilder("Typ");
+        StringBuilder z2 = new StringBuilder("RT");
+        StringBuilder z3 = new StringBuilder("Start-Ziel");
+        StringBuilder z4 = new StringBuilder("Kettenlaenge");
+
+        bool[] PreviouslyOnBoard = new bool[data.Zahnraeder.Count];
+        for (int i = 0; i < data.Interaktionen.Count; ++i)
+        {
+            if (data.Interaktionen[i] is Measurement.Platzierung)
+            {
+                var p = data.Interaktionen[i] as Measurement.Platzierung;
+                if (!PreviouslyOnBoard[p.ZahnradID] && !p.AufBrett)
+                    continue;
+
+                z1.Append(",Platzierung");
+                z2.AppendFormat(",{0}", p.Zeitpunkt);
+
+                if (!PreviouslyOnBoard[p.ZahnradID] && p.AufBrett)
+                    z3.Append(",rein");
+                else if (PreviouslyOnBoard[p.ZahnradID] && p.AufBrett)
+                    z3.Append(",innerhalb");
+                else
+                    z3.Append(",raus");
+
+                z4.Append(",");
+
+                PreviouslyOnBoard[p.ZahnradID] = p.AufBrett;
+            }
+            if (data.Interaktionen[i] is Measurement.Drehung)
+            {
+                var d = data.Interaktionen[i] as Measurement.Drehung;
+
+                z1.Append(",Drehung");
+                z2.AppendFormat(",{0}", d.Zeitpunkt);
+                z3.Append(",");
+                z4.AppendFormat(",{0}", Cogs[d.ZahnradID].System.Size);
+            }
+        }
+        results.Add(z1);
+        results.Add(z2);
+        results.Add(z3);
+        results.Add(z4);
     }
 
     /* *
