@@ -62,6 +62,12 @@ public abstract class Block
         return b;
     }
 
+    string resultsString = "";
+    public void Close()
+    {
+        resultsString = Aggregate(Experiment.Measurement.CurrentBlock);
+    }
+
     public void Update(float DeltaTime)
     {
         if(TrialCount > 0)

@@ -2,6 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
+using System.Linq;
 
 public class Experiment : MonoBehaviour
 {
@@ -58,7 +60,7 @@ public class Experiment : MonoBehaviour
     void Start()
     {
         Measurement.Init(0);
-
+        SetUIStatus(false);
         //LoadScene("instructions");
     }
 
@@ -89,7 +91,7 @@ public class Experiment : MonoBehaviour
         FPS = 1.0f / Time.deltaTime;
         if (Input.GetKey("escape"))
         {
-            Measurement.Finish();
+            Measurement.Save();
             Application.Quit();
         }
         /*if (Input.GetKeyUp("space") && trialPrefix != null)
@@ -142,8 +144,28 @@ public class Experiment : MonoBehaviour
         int parsedNum;
         bool valid = int.TryParse(vpn, out parsedNum);
         if (valid)
+        {
             Measurement.VPN_Num = parsedNum;
+            SetUIStatus(true);
+        }
+        else
+            SetUIStatus(false);
         Debug.Log("VPN: " + Measurement.VPN_Num.ToString());
+    }
+
+    private void SetUIStatus(bool active)
+    {
+        GameObject[] lockables = GameObject.FindGameObjectsWithTag("Lockable");
+        var lockableButtons = from l in lockables where l.GetComponent<Button>() != null select l;
+        foreach (var button in lockableButtons)
+        {
+            button.GetComponent<Button>().interactable = active;
+            if (active)
+                button.GetComponent<Image>().color = new Color(1, 1, 1, 1);
+            else
+                button.GetComponent<Image>().color = new Color(1, 1, 1, 0.5f);
+        }
+
     }
 
     /* IDX
@@ -155,7 +177,7 @@ public class Experiment : MonoBehaviour
      * 
      * begin 0
      * scene 1
-     */ 
+     */
     bool BoardLoaded = false;
     private void LoadScene(string name, bool withBoard = true)
     {
@@ -218,6 +240,8 @@ public class Experiment : MonoBehaviour
     private void EndBlock()
     {
         //Debug.Log("EndBlock: " + trialPrefix);
+        CurrentBlock.Close();
+        Measurement.Save();
         LoadScene(null, false);
         menue.enabled = true;
         ContinueButton.Deactivate();

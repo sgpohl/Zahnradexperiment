@@ -36,7 +36,7 @@ public class Measurement : MonoBehaviour
         data = new Messdaten();
         data.VPN = VPN;
     }
-    public void Finish()
+    public void Save()
     {
         SaveData(data);
     }
@@ -56,15 +56,10 @@ public class Measurement : MonoBehaviour
         
         timer.Restart();
     }
-    
-    public Trial CurrentTrial
-    {
-        get
-        {
-            var block = data.Blocks[data.Blocks.Count - 1];
-            return block.Trials[block.Trials.Count - 1];
-        }
-    }
+
+
+    public Block CurrentBlock    {  get  {  return data.Blocks[data.Blocks.Count - 1];  }  }
+    public Trial CurrentTrial    {  get  {  return CurrentBlock.Trials[CurrentBlock.Trials.Count - 1];   }    }
     
     public void SaveCogInfo(int id, int size)
     {
