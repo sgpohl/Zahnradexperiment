@@ -27,3 +27,5 @@ ProjectSettings/ClusterInputManager.asset
 ProjectSettings/AudioManager.asset
 Packages/packages-lock.json
 Packages/manifest.json
+*.pdb
+*.dll
