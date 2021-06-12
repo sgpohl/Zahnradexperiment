@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
 
 public class Zahnrad : MonoBehaviour
 {
@@ -8,18 +9,213 @@ public class Zahnrad : MonoBehaviour
     public CircleCollider2D OuterRadius { get; private set; }
 
     public List<Zahnrad> ConnectedCogs;
+    public ConnectedComponent System;
     public bool IsFixedInPlace = false;
     public bool CanRotateManually = true;
     public bool IsStart = false;
     public bool IsTarget = false;
-    public int Direction = 0;
+    public DirectionTrial.Direction Direction = DirectionTrial.Direction.INVALID;
     public SpriteRenderer sprite;
 
     private CogTrial CurrentTrial { get { return Experiment.CurrentTrial<CogTrial>(); } }
 
+    public class ConnectedComponent
+    {
+        private bool _CanRotate;
+        public bool CanRotate {
+            get
+            {
+                if (Dirty)
+                    CleanUp(parent);
+                return _CanRotate;
+            }
+            private set { _CanRotate = value; }
+        }
+        Zahnrad parent;
+        public ConnectedComponent(Zahnrad p)
+        {
+            parent = p;
+        }
+
+        public Zahnrad Start
+        {
+            get { return Set.FindLast(cog => cog.IsStart); }
+        }
+        public List<Zahnrad> Targets
+        {
+            get { return Set.FindAll(cog => cog.IsTarget); }
+        }
+
+        private List<Zahnrad> _Path(Zahnrad to)
+        {
+            if (parent == to)
+                return new List<Zahnrad> { parent };
+            if (rec_updated)
+                return new List<Zahnrad> { };
+            rec_updated = true;
+            List<Zahnrad> path = new List<Zahnrad> { };
+            foreach (var c in parent.ConnectedCogs)
+            {
+                var path_partial = c.System._Path(to);
+                if (path_partial.Count < path.Count || path.Count == 0)
+                {
+                    path = path_partial;
+                    path.Insert(0, parent);
+                }
+            }
+            return path;
+        }
+        public static int Distance(Zahnrad from, Zahnrad to)
+        {
+            int d = from.System._Path(to).Count;
+            from.System.rec_finished();
+            return d;
+        }
+
+        private List<Zahnrad> _Set()
+        {
+            if (rec_updated)
+                return new List<Zahnrad> { };
+            rec_updated = true;
+            var set = new List<Zahnrad> { };
+            foreach (var c in parent.ConnectedCogs)
+                set.Concat(c.System._Set());
+            return set;
+        }
+        private List<Zahnrad> Set
+        {
+            get
+            {
+                var set = _Set();
+                rec_finished();
+                return set;
+            }
+        }
+
+        public int Size()
+        {
+            return Set.Count;
+        }
+
+
+        private bool _dirty = false;
+        private void _Dirtyness(bool d)
+        {
+            if (rec_updated)
+                return;
+            rec_updated = true;
+            _dirty = d;
+            foreach (var c in parent.ConnectedCogs)
+                c.System._Dirtyness(d);
+        }
+        private bool Dirty
+        {
+            set
+            {
+                _Dirtyness(value);
+                rec_finished();
+            }
+            get => _dirty;
+        }
+        public void Merge(Zahnrad parent, Zahnrad other)
+        {
+            parent.System.Dirty = true;
+        }
+
+        public void Disconnect(Zahnrad parent)
+        {
+            foreach (Zahnrad c in parent.ConnectedCogs)
+                c.System.Dirty = true;
+            foreach (Zahnrad c in parent.ConnectedCogs)
+                c.ConnectedCogs.Remove(parent);
+            parent.ConnectedCogs.Clear();
+            parent.System.Dirty = true;
+        }
+
+
+
+        private bool rec_updated = false;
+        private int _rec_dir = 0;
+        private void CleanUp(Zahnrad source)
+        {
+            if (!Dirty)
+                return;
+            TestRotate(source);
+            source.System.Dirty = false;
+        }
+
+        private void rec_finished()
+        {
+            if (!rec_updated)
+                return;
+            rec_updated = false;
+            _rec_dir = 0;
+            foreach (var c in parent.ConnectedCogs)
+                c.System.rec_finished();
+        }
+        private void _SetSpeed(float speed)
+        {
+            if (rec_updated)
+                return;
+            rec_updated = true;
+            parent.RotationSpeed = speed;
+            foreach (var c in parent.ConnectedCogs)
+                c.System._SetSpeed(-speed * TranslationFactor(parent, c));
+        }
+        public void SetSpeed(float speed)
+        {
+            _SetSpeed(speed);
+            rec_finished();
+        }
+
+        private void _RotateAll(float angle)
+        {
+            if (rec_updated)
+                return;
+            rec_updated = true;
+            parent.transform.RotateAround(parent.transform.position, Vector3.forward, angle);
+            foreach (var c in parent.ConnectedCogs)
+                c.System._RotateAll(-angle * TranslationFactor(parent, c));
+        }
+        public void RotateAll(float angle)
+        {
+            _RotateAll(angle);
+            rec_finished();
+        }
+
+        private bool _TestRotate(int desired)
+        {
+            if (_rec_dir == desired)
+                return true;
+            if (_rec_dir != 0)
+                return false;
+            _rec_dir = desired;
+            foreach (var c in parent.ConnectedCogs)
+                if (!c.System._TestRotate(-desired))
+                    return false;
+            return true;
+        }
+        private void _PropagateCanRotatate(bool b)
+        {
+            if (rec_updated)
+                return;
+            rec_updated = true;
+            CanRotate = b;
+            foreach (var c in parent.ConnectedCogs)
+                c.System._PropagateCanRotatate(b);
+        }
+
+        public void TestRotate(Zahnrad cog)
+        {
+            _PropagateCanRotatate(_TestRotate(1));
+            rec_finished();
+        }
+    }
+
     void Awake()
     {
         ConnectedCogs = new List<Zahnrad>();
+        System = new ConnectedComponent(this);
 
         CircleCollider2D[] colliders = GetComponents<CircleCollider2D>();
         if (colliders[0].bounds.extents[0] > colliders[1].bounds.extents[0])
@@ -47,9 +243,8 @@ public class Zahnrad : MonoBehaviour
     {
         get {return RotationSpeed;}
         set 
-        { 
-            _SetSpeed(value);
-            rec_finished();
+        {
+            System.SetSpeed(value);
         }
     }
     
@@ -102,7 +297,7 @@ public class Zahnrad : MonoBehaviour
             Vector3 mouse = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, Camera.main.nearClipPlane));
             Vector2 rotator = OuterRadius.ClosestPoint(mouse);
             float rotation = Vector2.SignedAngle(RotationAttachmentPoint - (Vector2)transform.position, rotator - (Vector2)transform.position);
-            if (CanRotate)
+            if (System.CanRotate)
             {
                 RotateAll(rotation);
                 TotalRotation += rotation;
@@ -120,7 +315,7 @@ public class Zahnrad : MonoBehaviour
             }
         }
 
-        if (CanRotate && OnBoard)
+        if (System.CanRotate && OnBoard)
         {
             transform.RotateAround(transform.position, Vector3.forward, RotationSpeed * Time.deltaTime);
             RotationSpeed += -RotationSpeed * 1 *Time.deltaTime;
@@ -208,7 +403,7 @@ public class Zahnrad : MonoBehaviour
             CursorRotating = false;
             Speed = AverageRotationSpeed;
             CurrentTrial.RotationApplied(this, TotalRotation);
-            if(!CanRotate)
+            if(!System.CanRotate)
                 transform.eulerAngles = PreRotationAngle;
         }
     }
@@ -218,69 +413,11 @@ public class Zahnrad : MonoBehaviour
         return from.InnerRadius.bounds.extents[0] / to.InnerRadius.bounds.extents[0];
     }
 
-    private bool rec_updated = false;
-    private int _rec_dir = 0;
-    private void rec_finished()
-    {
-        if (!rec_updated)
-            return;
-        rec_updated = false;
-        _rec_dir = 0;
-        foreach (var c in ConnectedCogs)
-            c.rec_finished();
-    }
-    private void _SetSpeed(float speed)
-    {
-        if (rec_updated)
-            return;
-        rec_updated = true;
-        RotationSpeed = speed;
-        foreach(var c in ConnectedCogs)
-            c._SetSpeed(-speed * TranslationFactor(this, c));
-    }
-    
-    public void _RotateAll(float angle)
-    {
-        if (rec_updated)
-            return;
-        rec_updated = true;
-        transform.RotateAround(transform.position, Vector3.forward, angle);
-        foreach(var c in ConnectedCogs)
-            c._RotateAll(-angle * TranslationFactor(this, c));
-    }
     public void RotateAll(float angle)
     {
-        _RotateAll(angle);
-        rec_finished();
+        System.RotateAll(angle);
     }
 
-    private bool CanRotate;
-    public bool _TestRotate(int desired)
-    {
-        if (_rec_dir == desired)
-            return true;
-        if (_rec_dir != 0)
-            return false;
-        _rec_dir = desired;
-        foreach (var c in ConnectedCogs)
-            if (!c._TestRotate(-desired))
-                return false;
-        return true;
-    }
-    private void _PropagateCanRotatate(bool b)
-    {
-        if (rec_updated)
-            return;
-        rec_updated = true;
-        CanRotate = b;
-        foreach (var c in ConnectedCogs)
-            c._PropagateCanRotatate(b);
-    }
-    public void TestRotate()
-    {
-        _PropagateCanRotatate(_TestRotate(1));
-        rec_finished();
-    }
 
     public bool Contains(Vector2 pos)
     {
@@ -300,17 +437,11 @@ public class Zahnrad : MonoBehaviour
     public void ConnectTo(Zahnrad other)
     {
         ConnectedCogs.Add(other);
-        TestRotate();
+        System.Merge(this, other);
     }
     
     public void Disconnect()
     {
-        foreach(Zahnrad c in ConnectedCogs)
-        {
-            c.ConnectedCogs.Remove(this);
-            c.TestRotate();
-        }
-        ConnectedCogs.Clear();
-        TestRotate();
+        System.Disconnect(this);
     }
 }
