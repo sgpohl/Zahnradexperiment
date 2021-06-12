@@ -66,10 +66,7 @@ public class CogTrial : ITrial
 
         GameObject go = GameObject.Find("Spielbrett");
         if (go != null)
-        {
             GameBoard = go.GetComponent<Spielbrett>();
-            //Debug.Log("GameBoard present");
-        }
         else
             GameBoard = null;
 

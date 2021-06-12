@@ -128,7 +128,6 @@ public class Propeller : MonoBehaviour
 
     public bool Intersects(Propeller other)
     {
-        Debug.Log(Vector2.Distance(other.transform.position, transform.position).ToString("0.00") + "  " + (OuterRadius + other.OuterRadius).ToString("0.00"));
         return Vector2.Distance( other.transform.position, transform.position) < (OuterRadius + other.OuterRadius);
     }
 }

@@ -80,7 +80,6 @@ public class Experiment : MonoBehaviour
         LoadScene(name+"_instructions", false);
         menue.enabled = false;
         ContinueButton.Activate();
-        //Debug.Log("start "+name+ "  "+ SceneManager.GetActiveScene().buildIndex.ToString());
     }
 
     // Update is called once per frame
@@ -150,7 +149,6 @@ public class Experiment : MonoBehaviour
         }
         else
             SetUIStatus(false);
-        Debug.Log("VPN: " + Measurement.VPN_Num.ToString());
     }
 
     private void SetUIStatus(bool active)
