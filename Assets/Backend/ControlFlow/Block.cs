@@ -41,7 +41,7 @@ public abstract class Block
         switch (name)
         {
             case "carousel":
-                b = new CogBlock();
+                b = new CarouselBlock();
                 break;
             case "propeller":
                 b = new PropellerBlock();
@@ -103,5 +103,13 @@ public class PropellerBlock : Block
     protected override ITrial InstantiateTrial(string name)
     {
         return new PropellerTrial(name);
+    }
+}
+
+public class CarouselBlock : Block
+{
+    protected override ITrial InstantiateTrial(string name)
+    {
+        return new CarouselTrial(name);
     }
 }

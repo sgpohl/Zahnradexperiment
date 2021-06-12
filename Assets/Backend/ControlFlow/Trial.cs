@@ -25,6 +25,7 @@ public abstract class ITrial
     }
     public virtual void Close()
     {
+        Experiment.Measurement.MeasureTrialFinished();
     }
 
     public virtual void Aggregate(Measurement.Trial data, StreamWriter stream)
@@ -155,23 +156,28 @@ public class SpeedTrial : CogTrial
 {
     public override void Aggregate(Measurement.Trial data, StreamWriter stream)
     {
-        stream.WriteLine("RT-Erstauswahl,RT-LetzteWahl,CRESP");
+        stream.WriteLine("RT-Erstauswahl,RT-LetzteWahl,RT-Gesamt,AnzahlSelektionen,RESP-Typ,CRESP");
 
         long RT1 = 0;
         long RT2 = 0;
         int CRESP = -1;
+        int RESP_ID = -1;
+        int clicks = 0;
         for (int i = 0; i < data.Interaktionen.Count; ++i)
         {
             if (data.Interaktionen[i] is Measurement.Zahnradauswahl)
             {
+                clicks++;
                 if (RT1 == 0)
                     RT1 = data.Interaktionen[i].Zeitpunkt;
                 RT2 = data.Interaktionen[i].Zeitpunkt;
                 CRESP = (data.Interaktionen[i] as Measurement.Zahnradauswahl).CRESP ? 1 : 0;
+                RESP_ID = (data.Interaktionen[i] as Measurement.Zahnradauswahl).ZahnradID;
             }
         }
+        int RESP = data.Zahnraeder[RESP_ID].Zaehne;
 
-        stream.WriteLine(RT1.ToString() + ","+RT2.ToString()+"," + CRESP.ToString());
+        stream.WriteLine(RT1.ToString() + ","+RT2.ToString() + "," + data.Dauer.ToString() + "," + clicks.ToString() + "," + RESP.ToString() + "," + CRESP.ToString());
     }
 
     /* *
@@ -213,23 +219,27 @@ public class DirectionTrial : CogTrial
 {
     public override void Aggregate(Measurement.Trial data, StreamWriter stream)
     {
-        stream.WriteLine("RT-Erstauswahl,RT-LetzteWahl,CRESP");
+        stream.WriteLine("RT-Erstauswahl,RT-LetzteWahl,RT-Gesamt,AnzahlSelektionen,RESP,CRESP");
 
         long RT1 = 0;
         long RT2 = 0;
         int CRESP = -1;
+        int clicks = 0;
+        Direction RESP = Direction.INVALID;
         for (int i = 0; i < data.Interaktionen.Count; ++i)
         {
             if (data.Interaktionen[i] is Measurement.Richtungsauswahl)
             {
+                clicks++;
                 if (RT1 == 0)
                     RT1 = data.Interaktionen[i].Zeitpunkt;
                 RT2 = data.Interaktionen[i].Zeitpunkt;
                 CRESP = (data.Interaktionen[i] as Measurement.Richtungsauswahl).CRESP ? 1 : 0;
+                RESP = (data.Interaktionen[i] as Measurement.Richtungsauswahl).Richtung;
             }
         }
 
-        stream.WriteLine(RT1.ToString() + "," + RT2.ToString() + "," + CRESP.ToString());
+        stream.WriteLine(RT1.ToString() + "," + RT2.ToString() + "," + data.Dauer.ToString() + "," + clicks.ToString()+ "," + RESP.ToString() + "," + CRESP.ToString());
     }
 
     /* *
@@ -259,7 +269,7 @@ public class PropellerTrial : CogTrial
 {
     public override void Aggregate(Measurement.Trial data, StreamWriter stream)
     {
-        stream.WriteLine("RT-Erstplatzierung,RT-Propeller1,RT-Propeller2,Platzierungen,Drehungen,CRESP");
+        stream.WriteLine("RT-Erstplatzierung,RT-Propeller1,RT-Propeller2,RT-Gesamt,Platzierungen,Drehungen,CRESP");
 
         long RT1 = 0; //erstes mal reingezogen
         long RT2 = 0; //erster propeller
@@ -296,7 +306,7 @@ public class PropellerTrial : CogTrial
         }
         int CRESP = -1; //TODO
 
-        stream.WriteLine(RT1.ToString() + "," + RT2.ToString() + "," + RT3.ToString() + "," + placements.ToString() + "," + rotations.ToString() + "," + CRESP.ToString());
+        stream.WriteLine(RT1.ToString() + "," + RT2.ToString() + "," + RT3.ToString() + "," + data.Dauer.ToString() + "," + placements.ToString() + "," + rotations.ToString() + "," + CRESP.ToString());
     }
 
     /* *
@@ -319,5 +329,44 @@ public class PropellerTrial : CogTrial
             return;
         DetachedFrom.IsTarget = false;
         Experiment.Measurement.MeasurePropellerDetached(Cogs.FindIndex(c => c == DetachedFrom));
+    }
+}
+
+
+public class CarouselTrial : CogTrial
+{
+    public override void Aggregate(Measurement.Trial data, StreamWriter stream)
+    {
+        stream.WriteLine("RT-Erstplatzierung,RT-Gesamt,Platzierungen,Drehungen,CRESP");
+
+        long RT1 = 0; //erstes mal reingezogen
+        int placements = 0;
+        int rotations = 0;
+        for (int i = 0; i < data.Interaktionen.Count; ++i)
+        {
+            if (data.Interaktionen[i] is Measurement.Platzierung)
+            {
+                placements++;
+                var p = data.Interaktionen[i] as Measurement.Platzierung;
+                if (RT1 == 0 && p.AufBrett)
+                    RT1 = p.Zeitpunkt;
+            }
+            if (data.Interaktionen[i] is Measurement.Drehung)
+            {
+                rotations++;
+            }
+        }
+        int CRESP = -1; //TODO
+        //Zahnrad start = Cogs.FindLast(cog => cog.IsStart);
+
+
+        stream.WriteLine(RT1.ToString() + "," + data.Dauer.ToString() + "," + placements.ToString() + "," + rotations.ToString() + "," + CRESP.ToString());
+    }
+
+    /* *
+     * LOGIC
+     * */
+    public CarouselTrial(string name) : base(name)
+    {
     }
 }

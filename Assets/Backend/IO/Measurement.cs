@@ -49,7 +49,7 @@ public class Measurement : MonoBehaviour
     
     public void newTrial(ITrial trial)
     {
-        var t = new Trial{ Name = trial.Name };
+        var t = new Trial{ Name = trial.Name, Dauer = -1 };
         if(data.Blocks.Count == 0)
             newBlock("default");
         data.Blocks[data.Blocks.Count -1].Trials.Add(t);
@@ -94,6 +94,10 @@ public class Measurement : MonoBehaviour
     public void MeasurePropellerDetached(int id)
     {
         CurrentTrial().Interaktionen.Add(new PropellerEntfernt { ZahnradID = id, Zeitpunkt = timer.ElapsedMilliseconds });
+    }
+    public void MeasureTrialFinished()
+    {
+        CurrentTrial().Dauer = timer.ElapsedMilliseconds;
     }
 
     void SaveData(Messdaten data)
@@ -180,6 +184,8 @@ public class Measurement : MonoBehaviour
     {
         [XmlAttribute]
         public string Name;
+        [XmlAttribute]
+        public long Dauer;
         public List<ZahnradInfo> Zahnraeder;
         public List<Interaktion> Interaktionen;
         public Trial()
