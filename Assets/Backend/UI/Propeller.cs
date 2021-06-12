@@ -7,13 +7,27 @@ public class Propeller : MonoBehaviour
     private Zahnrad AttachedTo;
 
     public CircleCollider2D InnerRadius { get; private set; }
+    public float OuterRadius { get; private set; }
     private SpriteRenderer sprite;
 
     Vector3 baseScale;
     Quaternion baseRotation;
     void Awake()
     {
-        InnerRadius = GetComponent<CircleCollider2D>();
+        CircleCollider2D[] colliders = GetComponents<CircleCollider2D>();
+        CircleCollider2D OuterCollider;
+        if (colliders[0].bounds.extents[0] > colliders[1].bounds.extents[0])
+        {
+            InnerRadius = colliders[1];
+            OuterCollider = colliders[0];
+        }
+        else
+        {
+            InnerRadius = colliders[0];
+            OuterCollider = colliders[1];
+        }
+        OuterRadius = OuterCollider.radius * transform.localScale.x;
+        Destroy(OuterCollider);
 
         sprite = GetComponent<SpriteRenderer>();
         baseScale = this.transform.localScale;
@@ -21,7 +35,7 @@ public class Propeller : MonoBehaviour
 
     void Start()
     {
-        
+        Experiment.CurrentTrial<PropellerTrial>().RegisterPropeller(this);
     }
 
     // Update is called once per frame
@@ -109,5 +123,12 @@ public class Propeller : MonoBehaviour
     {
         Experiment.CurrentTrial<PropellerTrial>().DetachPropeller(AttachedTo);
         AttachedTo = null;
+    }
+
+
+    public bool Intersects(Propeller other)
+    {
+        Debug.Log(Vector2.Distance(other.transform.position, transform.position).ToString("0.00") + "  " + (OuterRadius + other.OuterRadius).ToString("0.00"));
+        return Vector2.Distance( other.transform.position, transform.position) < (OuterRadius + other.OuterRadius);
     }
 }

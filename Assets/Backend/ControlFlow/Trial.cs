@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.IO;
+using System.Linq;
 
 public abstract class ITrial
 {
@@ -23,14 +24,16 @@ public abstract class ITrial
 
         Experiment.Measurement.newTrial(this);
     }
-    public virtual void Close()
+    public void Close()
     {
         Experiment.Measurement.MeasureTrialFinished();
+        resultsString = Aggregate(Experiment.Measurement.CurrentTrial);
     }
 
-    public virtual void Aggregate(Measurement.Trial data, StreamWriter stream)
+    public string resultsString { get; private set; }
+    public virtual string Aggregate(Measurement.Trial data)
     {
-
+        return "";
     }
 }
 
@@ -134,7 +137,7 @@ public class CogTrial : ITrial
             return pos;
         Vector2 diff = pos - (Vector2)overlapping.transform.position;
         diff.Normalize();
-        diff *= cog.InnerRadius.radius + overlapping.OuterRadius.radius;
+        diff *= cog.InnerRadius + overlapping.OuterRadius;
 
         return (Vector2)overlapping.transform.position + diff;
     }
@@ -151,12 +154,12 @@ public class CogTrial : ITrial
         Experiment.Measurement.MeasureCogPlaced((int)(pos.x * 10), (int)(pos.y * 10), connected, cog.OnBoard, id);
     }
 }
-//verschiebungen
+
 public class SpeedTrial : CogTrial
 {
-    public override void Aggregate(Measurement.Trial data, StreamWriter stream)
+    public override string Aggregate(Measurement.Trial data)
     {
-        stream.WriteLine("RT-Erstauswahl,RT-LetzteWahl,RT-Gesamt,AnzahlSelektionen,RESP-Typ,CRESP");
+        string returnString = "RT-Erstauswahl,RT-LetzteWahl,RT-Gesamt,AnzahlSelektionen,RESP-Typ,CRESP\n";
 
         long RT1 = 0;
         long RT2 = 0;
@@ -177,7 +180,8 @@ public class SpeedTrial : CogTrial
         }
         int RESP = data.Zahnraeder[RESP_ID].Zaehne;
 
-        stream.WriteLine(RT1.ToString() + ","+RT2.ToString() + "," + data.Dauer.ToString() + "," + clicks.ToString() + "," + RESP.ToString() + "," + CRESP.ToString());
+        returnString += RT1.ToString() + "," + RT2.ToString() + "," + data.Dauer.ToString() + "," + clicks.ToString() + "," + RESP.ToString() + "," + CRESP.ToString();
+        return returnString;
     }
 
     /* *
@@ -217,9 +221,9 @@ public class SpeedTrial : CogTrial
 
 public class DirectionTrial : CogTrial
 {
-    public override void Aggregate(Measurement.Trial data, StreamWriter stream)
+    public override string Aggregate(Measurement.Trial data)
     {
-        stream.WriteLine("RT-Erstauswahl,RT-LetzteWahl,RT-Gesamt,AnzahlSelektionen,RESP,CRESP");
+        string returnString = "RT-Erstauswahl,RT-LetzteWahl,RT-Gesamt,AnzahlSelektionen,RESP,CRESP\n";
 
         long RT1 = 0;
         long RT2 = 0;
@@ -239,7 +243,8 @@ public class DirectionTrial : CogTrial
             }
         }
 
-        stream.WriteLine(RT1.ToString() + "," + RT2.ToString() + "," + data.Dauer.ToString() + "," + clicks.ToString()+ "," + RESP.ToString() + "," + CRESP.ToString());
+        returnString += RT1.ToString() + "," + RT2.ToString() + "," + data.Dauer.ToString() + "," + clicks.ToString()+ "," + RESP.ToString() + "," + CRESP.ToString();
+        return returnString;
     }
 
     /* *
@@ -267,9 +272,9 @@ public class DirectionTrial : CogTrial
 
 public class PropellerTrial : CogTrial
 {
-    public override void Aggregate(Measurement.Trial data, StreamWriter stream)
+    public override string Aggregate(Measurement.Trial data)
     {
-        stream.WriteLine("RT-Erstplatzierung,RT-Propeller1,RT-Propeller2,RT-Gesamt,Platzierungen,Drehungen,CRESP");
+        string returnString = "RT-Erstplatzierung,RT-Propeller1,RT-Propeller2,RT-Gesamt,Platzierungen,Drehungen,Propeller1,Propeller2,Geschwindigkeit,PropellerKontakt\n";
 
         long RT1 = 0; //erstes mal reingezogen
         long RT2 = 0; //erster propeller
@@ -304,16 +309,66 @@ public class PropellerTrial : CogTrial
                 propeller_placed--;
             }
         }
-        int CRESP = -1; //TODO
+        
+        Zahnrad start = Cogs.FindLast(cog => cog.IsStart);
+        List<Zahnrad> target = Cogs.FindAll(cog => cog.IsTarget);
 
-        stream.WriteLine(RT1.ToString() + "," + RT2.ToString() + "," + RT3.ToString() + "," + data.Dauer.ToString() + "," + placements.ToString() + "," + rotations.ToString() + "," + CRESP.ToString());
+        int[] P = new int[] { 0, 0 };
+
+        for(int i = 0; i<target.Count; ++i)
+        {
+            P[i]++;
+            int T_idx = Cogs.IndexOf(target[i]);
+            if (target[i].OnBoard)
+                P[i]++;
+            if (start.System.Contains(target[i]))
+                P[i]++;
+        }
+        int speed = 0;
+        int propeller_intersect = -1;
+        if (target.Count == 2)
+        {
+            int smallest = Cogs.Min(cog => cog.Size);
+            int largest = Cogs.Max(cog => cog.Size);
+
+            if (target[0].Size == target[1].Size)
+                speed = 1;
+            else
+                speed = 2;
+            if ((target[0].Size == smallest && target[1].Size == largest) ||
+                (target[0].Size == largest && target[1].Size == smallest))
+                speed = 3;
+
+            if (PropellerSet.Count == 2)
+            {
+                if ((P[0] + P[1]) < 6)
+                    propeller_intersect = 0;
+                else if (PropellerSet[0].Intersects(PropellerSet[1]))
+                    propeller_intersect = 1;
+                else
+                    propeller_intersect = 2;
+            }
+        }
+        else
+            propeller_intersect = 0;
+
+        returnString += RT1.ToString() + "," + RT2.ToString() + "," + RT3.ToString() + "," + data.Dauer.ToString() + "," + placements.ToString() + "," + rotations.ToString();
+        returnString += "," + P[0].ToString() + "," + P[1].ToString() + "," + speed.ToString() + "," + propeller_intersect.ToString() ;
+        return returnString;
     }
 
     /* *
      * LOGIC
      * */
+    private List<Propeller> PropellerSet;
     public PropellerTrial(string name) : base(name)
     {
+        PropellerSet = new List<Propeller>();
+    }
+
+    public void RegisterPropeller(Propeller p)
+    {
+        PropellerSet.Add(p);
     }
 
     public void AttachPropeller(Zahnrad AttachedTo)
@@ -335,9 +390,9 @@ public class PropellerTrial : CogTrial
 
 public class CarouselTrial : CogTrial
 {
-    public override void Aggregate(Measurement.Trial data, StreamWriter stream)
+    public override string Aggregate(Measurement.Trial data)
     {
-        stream.WriteLine("RT-Erstplatzierung,RT-Gesamt,Platzierungen,Drehungen,CRESP");
+        string returnString = "RT-Erstplatzierung,RT-Gesamt,Platzierungen,Drehungen,RESP,RESP-Distanz\n";
 
         long RT1 = 0; //erstes mal reingezogen
         int placements = 0;
@@ -356,11 +411,36 @@ public class CarouselTrial : CogTrial
                 rotations++;
             }
         }
-        int CRESP = -1; //TODO
-        //Zahnrad start = Cogs.FindLast(cog => cog.IsStart);
+        Zahnrad start = Cogs.FindLast(cog => cog.IsStart);
+        Zahnrad target = Cogs.FindLast(cog => cog.IsTarget);
+
+        int RESP;
+        bool connected = start.System.Contains(target);
+        int distance = 0;
+        if(connected)
+        {
+            distance = Zahnrad.ConnectedComponent.Distance(start, target);
+            bool CRESP = (distance % 2) == ((start.Direction == target.Direction)?1:0);
+            if (CRESP && start.System.CanRotate)
+                RESP = 5;
+            else if (!CRESP && start.System.CanRotate)
+                RESP = 4;
+            else
+                RESP = 3;
+        }
+        else
+        {
+            if (start.System.Size > 1 && target.System.Size > 1)
+                RESP = 2;
+            else if (start.System.Size > 1 || target.System.Size > 1)
+                RESP = 1;
+            else
+                RESP = 0;
+        }
 
 
-        stream.WriteLine(RT1.ToString() + "," + data.Dauer.ToString() + "," + placements.ToString() + "," + rotations.ToString() + "," + CRESP.ToString());
+        returnString += RT1.ToString() + "," + data.Dauer.ToString() + "," + placements.ToString() + "," + rotations.ToString() + "," + RESP.ToString()+","+distance.ToString();
+        return returnString;
     }
 
     /* *

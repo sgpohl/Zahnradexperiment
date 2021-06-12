@@ -68,9 +68,12 @@ public abstract class Block
             CurrentTrial.Update(DeltaTime);
     }
 
-    public virtual void Aggregate(Measurement.Block data, StreamWriter stream)
+    public virtual string Aggregate(Measurement.Block data)
     {
-        stream.WriteLine(data.Typ);
+        string returnString = data.Typ;
+        foreach (var trial in Trials)
+            returnString += "\n" + trial.resultsString;
+        return returnString;
     }
 }
 

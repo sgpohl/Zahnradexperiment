@@ -5,8 +5,10 @@ using System.Linq;
 
 public class Zahnrad : MonoBehaviour
 {
-    public CircleCollider2D InnerRadius { get; private set; }
-    public CircleCollider2D OuterRadius { get; private set; }
+    public CircleCollider2D InnerCollider { get; private set; }
+    public CircleCollider2D OuterCollider { get; private set; }
+    public float InnerRadius { get; private set; }
+    public float OuterRadius { get; private set; }
 
     public List<Zahnrad> ConnectedCogs;
     public ConnectedComponent System;
@@ -49,6 +51,10 @@ public class Zahnrad : MonoBehaviour
         {
             get { return Set.FindAll(cog => cog.IsTarget); }
         }
+        public bool Contains(Zahnrad other)
+        {
+            return Set.Contains(other);
+        }
 
         private List<Zahnrad> _Path(Zahnrad to)
         {
@@ -61,12 +67,12 @@ public class Zahnrad : MonoBehaviour
             foreach (var c in parent.ConnectedCogs)
             {
                 var path_partial = c.System._Path(to);
-                if (path_partial.Count < path.Count || path.Count == 0)
+                if ((path_partial.Count < path.Count && path_partial.Count > 0) || path.Count == 0)
                 {
                     path = path_partial;
-                    path.Insert(0, parent);
                 }
             }
+            path.Insert(0, parent);
             return path;
         }
         public static int Distance(Zahnrad from, Zahnrad to)
@@ -100,9 +106,9 @@ public class Zahnrad : MonoBehaviour
             }
         }
 
-        public int Size()
+        public int Size
         {
-            return Set.Count;
+            get { return Set.Count; }
         }
 
 
@@ -215,14 +221,16 @@ public class Zahnrad : MonoBehaviour
         CircleCollider2D[] colliders = GetComponents<CircleCollider2D>();
         if (colliders[0].bounds.extents[0] > colliders[1].bounds.extents[0])
         {
-            InnerRadius = colliders[1];
-            OuterRadius = colliders[0];
+            InnerCollider = colliders[1];
+            OuterCollider = colliders[0];
         }
         else
         {
-            InnerRadius = colliders[0];
-            OuterRadius = colliders[1];
+            InnerCollider = colliders[0];
+            OuterCollider = colliders[1];
         }
+        InnerRadius = InnerCollider.radius;
+        OuterRadius = OuterCollider.radius;
 
     }
     void Start()
@@ -245,7 +253,7 @@ public class Zahnrad : MonoBehaviour
     
     public int Size
     {
-        get {return (int)(InnerRadius.bounds.extents[0]*20 + 0.5);}
+        get {return (int)(InnerRadius*20 + 0.5);}
     }
     
     private bool CursorSelected = false;
@@ -290,7 +298,7 @@ public class Zahnrad : MonoBehaviour
         if(CursorRotating && OnBoard)
         {
             Vector3 mouse = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, Camera.main.nearClipPlane));
-            Vector2 rotator = OuterRadius.ClosestPoint(mouse);
+            Vector2 rotator = OuterCollider.ClosestPoint(mouse);
             float rotation = Vector2.SignedAngle(RotationAttachmentPoint - (Vector2)transform.position, rotator - (Vector2)transform.position);
             if (System.CanRotate)
             {
@@ -347,7 +355,7 @@ public class Zahnrad : MonoBehaviour
     private void CursorSelect(Vector2 pos)
     {
         pos = Camera.main.ScreenToWorldPoint(new Vector3(pos.x, pos.y, Camera.main.nearClipPlane));
-        if(InnerRadius.OverlapPoint(pos))
+        if(InnerCollider.OverlapPoint(pos))
         {
             if (!IsFixedInPlace)
             {
@@ -405,7 +413,7 @@ public class Zahnrad : MonoBehaviour
     
     public static float TranslationFactor(Zahnrad from, Zahnrad to)
     {
-        return from.InnerRadius.bounds.extents[0] / to.InnerRadius.bounds.extents[0];
+        return from.InnerRadius / to.InnerRadius;
     }
 
     public void RotateAll(float angle)
@@ -416,17 +424,17 @@ public class Zahnrad : MonoBehaviour
 
     public bool Contains(Vector2 pos)
     {
-        return Vector2.Distance(pos, transform.position) < InnerRadius.radius;
+        return Vector2.Distance(pos, transform.position) < InnerRadius;
     }
     public bool Intersects(Zahnrad other)
     {
         //Vector2 v = OuterRadius.ClosestPoint(other.transform.position);
         //return other.OuterRadius.bounds.Contains(v);
-        return Vector2.Distance(other.transform.position, transform.position) < (OuterRadius.radius + other.OuterRadius.radius)*0.95;
+        return Vector2.Distance(other.transform.position, transform.position) < (OuterRadius + other.OuterRadius)*0.95;
     }
     public bool Overlaps(Zahnrad other, Vector2 pos)
     {
-        return Vector2.Distance(other.transform.position, pos) < (InnerRadius.radius + other.OuterRadius.radius);
+        return Vector2.Distance(other.transform.position, pos) < (InnerRadius + other.OuterRadius);
     }
 
     public void ConnectTo(Zahnrad other)
