@@ -26,10 +26,14 @@ public class Zahnrad : MonoBehaviour
             get
             {
                 if (Dirty)
-                    CleanUp(parent);
+                    CleanUp();
                 return _CanRotate;
             }
-            private set { _CanRotate = value; }
+            private set
+            {
+                foreach (var cog in Set)
+                    cog.System._CanRotate = value;
+            }
         }
         Zahnrad parent;
         public ConnectedComponent(Zahnrad p)
@@ -72,23 +76,27 @@ public class Zahnrad : MonoBehaviour
             return d;
         }
 
-        private List<Zahnrad> _Set()
+        bool _set_selector = false;
+        private IEnumerable<Zahnrad> RecalculateSet()
         {
-            if (rec_updated)
+            if (_set_selector)
                 return new List<Zahnrad> { };
-            rec_updated = true;
-            var set = new List<Zahnrad> { };
+            _set_selector = true;
+            IEnumerable<Zahnrad> set = new List<Zahnrad> { };
             foreach (var c in parent.ConnectedCogs)
-                set.Concat(c.System._Set());
+                set = set.Concat(c.System.RecalculateSet());
+            set = set.Append(parent);
             return set;
         }
+
+        private List<Zahnrad> _set;
         private List<Zahnrad> Set
         {
             get
             {
-                var set = _Set();
-                rec_finished();
-                return set;
+                if (Dirty)
+                    CleanUp();
+                return _set;
             }
         }
 
@@ -98,60 +106,62 @@ public class Zahnrad : MonoBehaviour
         }
 
 
-        private bool _dirty = false;
-        private void _Dirtyness(bool d)
-        {
-            if (rec_updated)
-                return;
-            rec_updated = true;
-            _dirty = d;
-            foreach (var c in parent.ConnectedCogs)
-                c.System._Dirtyness(d);
-        }
+        private bool _dirty = true;
         private bool Dirty
         {
             set
             {
-                _Dirtyness(value);
-                rec_finished();
+                _dirty = value;
+                //dont use accessor! Set is recalculated dependent on dirtyness, so this would result in an endless recursion.
+                if (_set == null)
+                    return;
+                foreach (var c in _set)
+                    c.System._dirty = value;
             }
             get => _dirty;
         }
-        public void Merge(Zahnrad parent, Zahnrad other)
+        public void Merge(ConnectedComponent other)
         {
-            parent.System.Dirty = true;
+            Dirty = true;
+            other.Dirty = true;
         }
 
-        public void Disconnect(Zahnrad parent)
+        public void Disconnect()
         {
-            foreach (Zahnrad c in parent.ConnectedCogs)
-                c.System.Dirty = true;
+            Dirty = true;
             foreach (Zahnrad c in parent.ConnectedCogs)
                 c.ConnectedCogs.Remove(parent);
             parent.ConnectedCogs.Clear();
-            parent.System.Dirty = true;
         }
 
 
 
         private bool rec_updated = false;
         private int _rec_dir = 0;
-        private void CleanUp(Zahnrad source)
+        private void CleanUp()
         {
             if (!Dirty)
                 return;
-            TestRotate(source);
-            source.System.Dirty = false;
+
+            _set = RecalculateSet().ToList();
+            foreach (var c in _set)
+            {
+                c.System._set_selector = false;
+                c.System._set = _set;
+            }
+            Dirty = false;
+
+            CanRotate = _TestRotate(1);
+            rec_finished();
         }
 
         private void rec_finished()
         {
-            if (!rec_updated)
-                return;
-            rec_updated = false;
-            _rec_dir = 0;
-            foreach (var c in parent.ConnectedCogs)
-                c.System.rec_finished();
+            foreach (var cog in Set)
+            {
+                cog.System._rec_dir = 0;
+                cog.System.rec_updated = false;
+            }
         }
         private void _SetSpeed(float speed)
         {
@@ -194,21 +204,6 @@ public class Zahnrad : MonoBehaviour
                 if (!c.System._TestRotate(-desired))
                     return false;
             return true;
-        }
-        private void _PropagateCanRotatate(bool b)
-        {
-            if (rec_updated)
-                return;
-            rec_updated = true;
-            CanRotate = b;
-            foreach (var c in parent.ConnectedCogs)
-                c.System._PropagateCanRotatate(b);
-        }
-
-        public void TestRotate(Zahnrad cog)
-        {
-            _PropagateCanRotatate(_TestRotate(1));
-            rec_finished();
         }
     }
 
@@ -437,11 +432,11 @@ public class Zahnrad : MonoBehaviour
     public void ConnectTo(Zahnrad other)
     {
         ConnectedCogs.Add(other);
-        System.Merge(this, other);
+        System.Merge(other.System);
     }
     
     public void Disconnect()
     {
-        System.Disconnect(this);
+        System.Disconnect();
     }
 }
