@@ -54,7 +54,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Assets\Backend\IO\ExperimentConfig.cs" />
+    <Compile Include="Assets\Backend\ControlFlow\Trial.cs" />
     <Compile Include="Assets\Backend\UI\Zahnrad.cs" />
+    <Compile Include="Assets\Backend\UI\Auswahlzahnrad.cs" />
+    <Compile Include="Assets\Backend\ControlFlow\Block.cs" />
     <Compile Include="Assets\Backend\IO\Measurement.cs" />
     <Compile Include="Assets\Backend\ControlFlow\InstructionBase.cs" />
     <Compile Include="Assets\Backend\ControlFlow\Experiment.cs" />
@@ -62,9 +65,8 @@
     <Compile Include="Assets\Backend\UI\Auswahlpfeil.cs" />
     <Compile Include="Assets\Backend\UI\Propeller.cs" />
     <Compile Include="Assets\Backend\UI\Spielbrett.cs" />
-    <Compile Include="Assets\Backend\UI\Auswahlzahnrad.cs" />
-    <Compile Include="Assets\Backend\ControlFlow\Block.cs" />
-    <Compile Include="Assets\Backend\ControlFlow\Trial.cs" />
+    <Compile Include="Assets\Backend\ControlFlow\Replay.cs" />
+    <Compile Include="Assets\Backend\ControlFlow\ReplayInput.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">

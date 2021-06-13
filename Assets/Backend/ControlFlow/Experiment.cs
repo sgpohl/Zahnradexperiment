@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using System.Linq;
+using UnityEngine.EventSystems;
 
 public class Experiment : MonoBehaviour
 {
@@ -33,6 +34,8 @@ public class Experiment : MonoBehaviour
     }
     public static bool TrialIsActive { get { return CurrentBlock != null && CurrentBlock.TrialCount > 0; } }
 
+    private ReplayInput.Data Replay = null;
+
     void Awake()
     {
         QualitySettings.vSyncCount = 0;
@@ -48,6 +51,7 @@ public class Experiment : MonoBehaviour
 
         Blocks = new List<Block>();
         _measurement = gameObject.AddComponent(typeof(Measurement)) as Measurement;
+        Replay = new ReplayInput.Data();
 
         //ExperimentConfig.Load("config.xml");
 
@@ -87,17 +91,33 @@ public class Experiment : MonoBehaviour
     private bool IsLoading = false;
     void Update()
     {
+        if (Replay.IsReady)
+            Replay.WriteCurrentState();
+
         FPS = 1.0f / Time.deltaTime;
-        if (Input.GetKey("escape"))
+        if (Input.GetKeyUp("escape"))
         {
             Measurement.Save();
             Application.Quit();
         }
+        if (Input.GetKeyUp("space"))
+        {
+            Replay.Save("VPN"+ Measurement.VPN_Num.ToString() + ".replay");
+            //EventSystem.current.currentInputModule.inputOverride = gameObject.AddComponent(typeof(ReplayInput)) as ReplayInput;
+        }
+
+        if (Input.GetKeyUp("a"))
+        {
+            EventSystem.current.currentInputModule.input.enabled = false;
+            EventSystem.current.currentInputModule.inputOverride = gameObject.AddComponent(typeof(ReplayInput)) as ReplayInput;
+            (EventSystem.current.currentInputModule.inputOverride as ReplayInput).Init("VPN123.replay");
+        }
+
         /*if (Input.GetKeyUp("space") && trialPrefix != null)
         {
             NextTrial();
         }*/
-        if(CurrentBlock != null && !IsLoading)
+        if (CurrentBlock != null && !IsLoading)
             CurrentBlock.Update(Time.deltaTime);
     }
 
@@ -146,6 +166,8 @@ public class Experiment : MonoBehaviour
         {
             Measurement.VPN_Num = parsedNum;
             SetUIStatus(true);
+
+            Replay.StartRecording();
         }
         else
             SetUIStatus(false);
