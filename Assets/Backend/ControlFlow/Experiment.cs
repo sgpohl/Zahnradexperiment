@@ -100,6 +100,8 @@ public class Experiment : MonoBehaviour
             Measurement.Save();
             Application.Quit();
         }
+
+        /*
         if (Input.GetKeyUp("space"))
         {
             Replay.Save("VPN"+ Measurement.VPN_Num.ToString() + ".replay");
@@ -112,6 +114,7 @@ public class Experiment : MonoBehaviour
             EventSystem.current.currentInputModule.inputOverride = gameObject.AddComponent(typeof(ReplayInput)) as ReplayInput;
             (EventSystem.current.currentInputModule.inputOverride as ReplayInput).Init("VPN123.replay");
         }
+        */
 
         /*if (Input.GetKeyUp("space") && trialPrefix != null)
         {
