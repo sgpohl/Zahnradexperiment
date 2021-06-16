@@ -500,9 +500,14 @@ public class CarouselTrial : CogTrial
         {
             distance = Zahnrad.ConnectedComponent.Distance(start, target);
             bool CRESP = (distance % 2) == ((start.Direction == target.Direction)?1:0);
-            if (CRESP && start.System.CanRotate)
+            /*if (CRESP && start.System.CanRotate)
                 RESP = 5;
             else if (!CRESP && start.System.CanRotate)
+                RESP = 4;
+            else
+                RESP = 3;
+                */
+            if (CRESP && start.System.CanRotate)
                 RESP = 4;
             else
                 RESP = 3;
