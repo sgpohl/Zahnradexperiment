@@ -377,26 +377,46 @@ public class PropellerTrial : CogTrial
         StringBuilder z2 = new StringBuilder("RT");
         StringBuilder z3 = new StringBuilder("Start-Ziel");
         StringBuilder z4 = new StringBuilder("Kettenlaenge");
+        StringBuilder z5 = new StringBuilder("Zahnradgroesse");
+        StringBuilder z6 = new StringBuilder("Mit Propeller");
 
         bool[] PreviouslyOnBoard = new bool[data.Zahnraeder.Count];
-        Measurement.Interaktion LastInteraction = null;
+        int P1_idx = -1;
+        int P2_idx = -1;
         for (int i = 0; i < data.Interaktionen.Count; ++i)
         {
-            if (data.Interaktionen[i] is Measurement.PropellerAngefuegt)
+            if (data.Interaktionen[i] is Measurement.PropellerEntfernt)
             {
+                int cogID = (data.Interaktionen[i] as Measurement.PropellerEntfernt).ZahnradID;
+                int cogSize = Experiment.Measurement.CurrentTrial.Zahnraeder[cogID].Zaehne;
+                if (P1_idx == cogID)
+                    P1_idx = -1;
+                if (P2_idx == cogID)
+                    P2_idx = -1;
+
                 z1.Append(",Propeller");
                 z2.AppendFormat(",{0}", data.Interaktionen[i].Zeitpunkt);
-                if (LastInteraction != null && LastInteraction is Measurement.PropellerEntfernt)
-                    z3.AppendFormat(",{0}", "umgelegt");
-                else
-                    z3.AppendFormat(",{0}", "angelegt");
-                z4.Append(",");
-            } else if(LastInteraction is Measurement.PropellerEntfernt)
-            {
-                z1.Append(",Propeller");
-                z2.AppendFormat(",{0}", LastInteraction.Zeitpunkt);
                 z3.AppendFormat(",{0}", "entfernt");
                 z4.Append(",");
+                z5.AppendFormat(",{0}", cogSize);
+                z6.Append(",");
+            }
+
+            if (data.Interaktionen[i] is Measurement.PropellerAngefuegt)
+            {
+                int cogID = (data.Interaktionen[i] as Measurement.PropellerAngefuegt).ZahnradID;
+                int cogSize = Experiment.Measurement.CurrentTrial.Zahnraeder[cogID].Zaehne;
+                if (P1_idx == -1)
+                    P1_idx = cogID;
+                else if (P2_idx == -1)
+                    P2_idx = cogID;
+
+                z1.Append(",Propeller");
+                z2.AppendFormat(",{0}", data.Interaktionen[i].Zeitpunkt);
+                z3.AppendFormat(",{0}", "angelegt");
+                z4.Append(",");
+                z5.AppendFormat(",{0}", cogSize);
+                z6.Append(",");
             }
 
             if (data.Interaktionen[i] is Measurement.Platzierung)
@@ -415,7 +435,23 @@ public class PropellerTrial : CogTrial
                 else
                     z3.Append(",raus");
 
+                int cogSize = Experiment.Measurement.CurrentTrial.Zahnraeder[p.ZahnradID].Zaehne;
                 z4.Append(",");
+                z5.AppendFormat(",{0}", cogSize);
+
+
+                if(P1_idx == p.ZahnradID || P2_idx == p.ZahnradID)
+                {
+                    z1.Append(",Propeller");
+                    z2.AppendFormat(",{0}", p.Zeitpunkt);
+                    z3.Append(",bewegt");
+                    z4.Append(",");
+                    z5.AppendFormat(",{0}", cogSize);
+                    z6.Append(",1,");
+
+                }
+                else
+                    z6.Append(",0");
 
                 PreviouslyOnBoard[p.ZahnradID] = p.AufBrett;
             }
@@ -427,13 +463,16 @@ public class PropellerTrial : CogTrial
                 z2.AppendFormat(",{0}", d.Zeitpunkt);
                 z3.Append(",");
                 z4.AppendFormat(",{0}", Cogs[d.ZahnradID].System.Size);
+                z5.AppendFormat(",{0}", Experiment.Measurement.CurrentTrial.Zahnraeder[d.ZahnradID].Zaehne);
+                z6.Append(",");
             }
-            LastInteraction = data.Interaktionen[i];
         }
         results.Add(z1);
         results.Add(z2);
         results.Add(z3);
         results.Add(z4);
+        results.Add(z5);
+        results.Add(z6);
     }
 
     /* *
@@ -532,6 +571,7 @@ public class CarouselTrial : CogTrial
         StringBuilder z2 = new StringBuilder("RT");
         StringBuilder z3 = new StringBuilder("Start-Ziel");
         StringBuilder z4 = new StringBuilder("Kettenlaenge");
+        StringBuilder z5 = new StringBuilder("Zahnradgroesse");
 
         bool[] PreviouslyOnBoard = new bool[data.Zahnraeder.Count];
         for (int i = 0; i < data.Interaktionen.Count; ++i)
@@ -541,6 +581,8 @@ public class CarouselTrial : CogTrial
                 var p = data.Interaktionen[i] as Measurement.Platzierung;
                 if (!PreviouslyOnBoard[p.ZahnradID] && !p.AufBrett)
                     continue;
+
+                int cogSize = Experiment.Measurement.CurrentTrial.Zahnraeder[p.ZahnradID].Zaehne;
 
                 z1.Append(",Platzierung");
                 z2.AppendFormat(",{0}", p.Zeitpunkt);
@@ -553,23 +595,27 @@ public class CarouselTrial : CogTrial
                     z3.Append(",raus");
 
                 z4.Append(",");
+                z5.AppendFormat(",{0}", cogSize);
 
                 PreviouslyOnBoard[p.ZahnradID] = p.AufBrett;
             }
             if (data.Interaktionen[i] is Measurement.Drehung)
             {
                 var d = data.Interaktionen[i] as Measurement.Drehung;
+                int cogSize = Experiment.Measurement.CurrentTrial.Zahnraeder[d.ZahnradID].Zaehne;
 
                 z1.Append(",Drehung");
                 z2.AppendFormat(",{0}", d.Zeitpunkt);
                 z3.Append(",");
                 z4.AppendFormat(",{0}", Cogs[d.ZahnradID].System.Size);
+                z5.AppendFormat(",{0}", cogSize);
             }
         }
         results.Add(z1);
         results.Add(z2);
         results.Add(z3);
         results.Add(z4);
+        results.Add(z5);
     }
 
     /* *
