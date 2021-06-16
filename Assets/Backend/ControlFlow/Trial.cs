@@ -288,6 +288,8 @@ public class PropellerTrial : CogTrial
     {
         results.Add(new StringBuilder("RT-Erstplatzierung,RT-Propeller1,RT-Propeller2,RT-Gesamt,Platzierungen,Drehungen,Propeller1,Propeller2,Geschwindigkeit,PropellerKontakt"));
 
+
+        //TODO: platzierungen nur wenn sie mit brett interagieren
         long RT1 = 0; //erstes mal reingezogen
         long RT2 = 0; //erster propeller
         long RT3 = 0; //erstes mal 2 propeller
