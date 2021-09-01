@@ -1,8 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
-public class Propeller : MonoBehaviour
+public class Propeller : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
 {
     private Zahnrad AttachedTo;
 
@@ -44,7 +45,7 @@ public class Propeller : MonoBehaviour
 
         if (CursorSelected)
         {
-            Vector3 tpos = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, Camera.main.nearClipPlane));
+            Vector3 tpos = Camera.main.ScreenToWorldPoint(new Vector3(Experiment.Input.mousePosition.x, Experiment.Input.mousePosition.y, Camera.main.nearClipPlane));
             Vector2 spos = SnapToCog(tpos.x + SelectionOffset.x, tpos.y + SelectionOffset.y);
 
             transform.position = new Vector3(spos.x, spos.y, transform.position.z);
@@ -79,14 +80,24 @@ public class Propeller : MonoBehaviour
 
     private bool CursorSelected = false;
     private Vector2 SelectionOffset;
+    public void OnPointerDown(PointerEventData eventData)
+    {
+        CursorSelect(eventData.position);
+    }
+    public void OnPointerUp(PointerEventData eventData)
+    {
+        CursorDeselect(eventData.position);
+    }
+    /*
     void OnMouseDown()
     {
-        CursorSelect(Input.mousePosition);
+        CursorSelect(Experiment.Input.mousePosition);
     }
     void OnMouseUp()
     {
-        CursorDeselect(Input.mousePosition);
+        CursorDeselect(Experiment.Input.mousePosition);
     }
+    */
 
     private void CursorSelect(Vector2 pos)
     {
@@ -99,7 +110,6 @@ public class Propeller : MonoBehaviour
             transform.localScale = baseScale * 1.15f;
 
             sprite.sortingOrder = 4;
-
         }
     }
 

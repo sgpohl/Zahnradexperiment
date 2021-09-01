@@ -36,7 +36,7 @@ public class Measurement : MonoBehaviour
         data = new Messdaten();
         data.VPN = VPN;
     }
-    public void Save()
+    public void SaveAll()
     {
         SaveData(data);
     }
@@ -93,9 +93,28 @@ public class Measurement : MonoBehaviour
     {
         CurrentTrial.Interaktionen.Add(new PropellerEntfernt { ZahnradID = id, Zeitpunkt = timer.ElapsedMilliseconds });
     }
+    public void MeasureSelection(int selectorNumber, bool correct)
+    {
+        CurrentTrial.Interaktionen.Add(new Optionsauswahl { Nummer = selectorNumber, CRESP = correct, Zeitpunkt = timer.ElapsedMilliseconds });
+    }
     public void MeasureTrialFinished()
     {
         CurrentTrial.Dauer = timer.ElapsedMilliseconds;
+    }
+
+    public void SaveCurrentBlock()
+    {
+        int blockIdx = data.Blocks.Count - 1;
+        var data_block = data.Blocks[blockIdx];
+        var logic_block = Experiment.Instance.Blocks[blockIdx];
+
+        string csvPath = Path.Combine(Application.persistentDataPath, logic_block.FileName+".csv");
+
+        using (var stream = new StreamWriter(new FileStream(csvPath, FileMode.Create)))
+        {
+            stream.WriteLine(logic_block.Aggregate(data_block));
+            stream.Flush();
+        }
     }
 
     void SaveData(Messdaten data)
@@ -224,5 +243,12 @@ public class Measurement : MonoBehaviour
     {
         [XmlAttribute]
         public int ZahnradID;
+    }
+    public class Optionsauswahl : Interaktion
+    {
+        [XmlAttribute]
+        public int Nummer;
+        [XmlAttribute]
+        public bool CRESP;
     }
 }

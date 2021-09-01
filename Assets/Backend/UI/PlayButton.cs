@@ -1,8 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
-public class PlayButton : MonoBehaviour
+public class PlayButton : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
 {
     private float ClickedDuration = 0.0f;
     private const float TargetTimeForEffect = 0.7f;
@@ -49,7 +50,17 @@ public class PlayButton : MonoBehaviour
     }
 
     private bool Clicked = false;
-    void OnMouseDown()
+    public void OnPointerDown(PointerEventData eventData)
+    {
+        Clicked = true;
+    }
+
+    public void OnPointerUp(PointerEventData eventData)
+    {
+        Clicked = false;
+        ClickedDuration = 0.0f;
+    }
+    /*void OnMouseDown()
     {
         Clicked = true;
     }
@@ -57,7 +68,7 @@ public class PlayButton : MonoBehaviour
     {
         Clicked = false;
         ClickedDuration = 0.0f;
-    }
+    }*/
 
     bool Usable = true;
     public void Enable()
@@ -77,7 +88,9 @@ public class PlayButton : MonoBehaviour
     }
     public void Deactivate()
     {
-        OnMouseUp();
+        //OnMouseUp();
+        OnPointerUp(null);
         gameObject.SetActive(false);
     }
+
 }

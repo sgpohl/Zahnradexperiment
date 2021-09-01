@@ -2,8 +2,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
+using UnityEngine.EventSystems;
 
-public class Zahnrad : MonoBehaviour
+
+public class Zahnrad : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
 {
     public CircleCollider2D InnerCollider { get; private set; }
     public CircleCollider2D OuterCollider { get; private set; }
@@ -19,8 +21,26 @@ public class Zahnrad : MonoBehaviour
     public DirectionTrial.Direction Direction = DirectionTrial.Direction.INVALID;
     public SpriteRenderer sprite;
 
+    private Zahnrad.DragNDrop Movement;
+
     private CogTrial CurrentTrial { get { return Experiment.CurrentTrial<CogTrial>(); } }
 
+
+    public class DragNDrop : DragNDrop<Zahnrad>
+    {
+        protected override Vector2 PositionConstraint(float x, float y)
+        {
+            return SnapToGrid(x, y);
+        }
+
+        private Vector2 SnapToGrid(float x, float y)
+        {
+            var trial = CurrentTrial as CogTrial;
+            if (trial.GameBoard != null)
+                return trial.GameBoard.SnapToGrid(x, y);
+            return new Vector2(x, y);
+        }
+    }
     public class ConnectedComponent
     {
         private bool _CanRotate;
@@ -215,6 +235,12 @@ public class Zahnrad : MonoBehaviour
 
     void Awake()
     {
+        Movement = gameObject.AddComponent(typeof(Zahnrad.DragNDrop)) as Zahnrad.DragNDrop;
+        Movement.Enabled = !this.IsFixedInPlace;
+        Movement.IsInBounds = (Vector2 pos) => { return this.IsInInnerBounds(pos); };
+        Movement.SelectionCallback = this.CursorSelect;
+        Movement.DeselectionCallback = this.CursorDeselect;
+
         ConnectedCogs = new List<Zahnrad>();
         System = new ConnectedComponent(this);
 
@@ -232,12 +258,11 @@ public class Zahnrad : MonoBehaviour
         InnerRadius = InnerCollider.radius;
         OuterRadius = OuterCollider.radius;
 
+        sprite = GetComponent<SpriteRenderer>();
     }
     void Start()
     {
         CurrentTrial.RegisterCog(this);
-
-        sprite = GetComponent<SpriteRenderer>();
     }
 
     // Update is called once per frame
@@ -255,9 +280,6 @@ public class Zahnrad : MonoBehaviour
     {
         get {return (int)(InnerRadius*20 + 0.5);}
     }
-    
-    private bool CursorSelected = false;
-    private Vector2 SelectionOffset;
     
     private bool CursorRotating = false;
     private Vector2 RotationAttachmentPoint;
@@ -285,19 +307,9 @@ public class Zahnrad : MonoBehaviour
             }
         }*/
 
-        if (CursorSelected)
-        {
-            Vector3 tpos = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, Camera.main.nearClipPlane));
-            Vector2 spos = SnapToGrid(tpos.x + SelectionOffset.x, tpos.y + SelectionOffset.y);
-            spos = CurrentTrial.NearestPositionCandidate(spos, this);
-
-            if (CurrentTrial.PositionIsValid(spos, this))
-                transform.position = new Vector3(spos.x, spos.y, transform.position.z);
-        }
-        
         if(CursorRotating && OnBoard)
         {
-            Vector3 mouse = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, Camera.main.nearClipPlane));
+            Vector3 mouse = Camera.main.ScreenToWorldPoint(new Vector3(Experiment.Input.mousePosition.x, Experiment.Input.mousePosition.y, Camera.main.nearClipPlane));
             Vector2 rotator = OuterCollider.ClosestPoint(mouse);
             float rotation = Vector2.SignedAngle(RotationAttachmentPoint - (Vector2)transform.position, rotator - (Vector2)transform.position);
             if (System.CanRotate)
@@ -305,6 +317,7 @@ public class Zahnrad : MonoBehaviour
                 RotateAll(rotation);
                 TotalRotation += rotation;
                 RotationAttachmentPoint = rotator;
+
 
                 //AverageRotationSpeed = (1-50*Time.deltaTime)*AverageRotationSpeed + 50*Time.deltaTime*rotation;
                 AverageRotationSpeed = rotation / Time.deltaTime;
@@ -335,82 +348,80 @@ public class Zahnrad : MonoBehaviour
         }
     }
 
-    private Vector2 SnapToGrid(float x, float y)
+    public void OnPointerDown(PointerEventData eventData)
     {
-        if (CurrentTrial.GameBoard != null)
-            return CurrentTrial.GameBoard.SnapToGrid(x, y);
-        return new Vector2(x, y);
+        Vector2 pos = Movement.CursorWorldPosition;
+        if (IsInInnerBounds(pos))
+            return;
+        RotationSelect(pos);
     }
 
-    //Detect when the user clicks the GameObject
+    public void OnPointerUp(PointerEventData eventData)
+    {
+        if (CursorRotating)
+            RotationDeselect(Movement.CursorWorldPosition);
+    }
+    /*
     void OnMouseDown()
     {
-        CursorSelect(Input.mousePosition);
+        Vector2 pos = Movement.CursorWorldPosition;
+        if (IsInInnerBounds(pos))
+            return;
+        RotationSelect(pos);
     }
     void OnMouseUp()
     {
-        CursorDeselect(Input.mousePosition);
+        if (CursorRotating)
+            RotationDeselect(Movement.CursorWorldPosition);
     }
-    
+    */
+
+    private bool IsInInnerBounds(Vector2 pos)
+    {
+        return this.InnerCollider.OverlapPoint(pos);
+    }
+
     private void CursorSelect(Vector2 pos)
     {
-        pos = Camera.main.ScreenToWorldPoint(new Vector3(pos.x, pos.y, Camera.main.nearClipPlane));
-        if(InnerCollider.OverlapPoint(pos))
-        {
-            if (!IsFixedInPlace)
-            {
-                SelectionOffset = ((Vector2)transform.position) - pos;
-                Speed = 0;
-                Disconnect();
-                CursorSelected = true;
-                transform.localScale = Vector3.one * 1.15f;
+        Speed = 0;
+        Disconnect();
+    }
+    private void CursorDeselect(Vector2 pos)
+    {
+        CurrentTrial.ConnectCog(this);
+        CurrentTrial.PlacementApplied(this, (Vector2)transform.position);
+    }
 
-                sprite.sortingOrder = 3;
-            }
-        }
-        else
-        {
-            /*
+    private void RotationSelect(Vector2 pos)
+    {
+        /*
             if (RotationSpeed != 0)
                 SetSpeed(0);
             else
                 SetSpeed(-30 / InnerRadius.bounds.extents[0]);
             Experiment.Instance.RotationApplied(this, RotationSpeed);
             */
-            if(CanRotateManually)
-            {
-                Speed = 0;
-                TotalRotation = 0;
-                AverageRotationSpeed = 0;
-                RotationAttachmentPoint = pos;
-                CursorRotating = true;
-                PreRotationAngle = transform.eulerAngles;
-                WiggleAngle = 0;
-            }
+        if (CanRotateManually)
+        {
+            Speed = 0;
+            TotalRotation = 0;
+            AverageRotationSpeed = 0;
+            RotationAttachmentPoint = pos;
+            CursorRotating = true;
+            PreRotationAngle = transform.eulerAngles;
+            WiggleAngle = 0;
         }
     }
-    
-    private void CursorDeselect(Vector2 pos)
+    private void RotationDeselect(Vector2 pos)
     {
-        if(CursorSelected)
-        {
-            CursorSelected = false;
-            CurrentTrial.ConnectCog(this);
-            CurrentTrial.PlacementApplied(this, (Vector2)transform.position);
-
-            transform.localScale = Vector3.one;
-            sprite.sortingOrder = 1;
-        }
-        if(CursorRotating)
-        {
-            CursorRotating = false;
-            Speed = AverageRotationSpeed;
-            CurrentTrial.RotationApplied(this, TotalRotation);
-            if(!System.CanRotate)
-                transform.eulerAngles = PreRotationAngle;
-        }
+        CursorRotating = false;
+        Speed = AverageRotationSpeed;
+        CurrentTrial.RotationApplied(this, TotalRotation);
+        if (!System.CanRotate)
+            transform.eulerAngles = PreRotationAngle;
     }
-    
+
+
     public static float TranslationFactor(Zahnrad from, Zahnrad to)
     {
         return from.InnerRadius / to.InnerRadius;

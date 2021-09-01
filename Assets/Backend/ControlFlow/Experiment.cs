@@ -6,6 +6,10 @@ using UnityEngine.UI;
 using System.Linq;
 using UnityEngine.EventSystems;
 
+/**
+ * Singleton. Coordinates global data exchange.
+ * Attach it once (eg. Main Camera)
+ **/
 public class Experiment : MonoBehaviour
 {
     public static Experiment Instance { get; private set; }
@@ -34,7 +38,15 @@ public class Experiment : MonoBehaviour
     }
     public static bool TrialIsActive { get { return CurrentBlock != null && CurrentBlock.TrialCount > 0; } }
 
-    private ReplayInput.Data Replay = null;
+    public static BaseInput Input
+    {
+        get
+        {
+            return EventSystem.current.currentInputModule.input;
+        }
+    }
+
+    public bool TestMode { get; private set; }
 
     void Awake()
     {
@@ -51,7 +63,6 @@ public class Experiment : MonoBehaviour
 
         Blocks = new List<Block>();
         _measurement = gameObject.AddComponent(typeof(Measurement)) as Measurement;
-        Replay = new ReplayInput.Data();
 
         //ExperimentConfig.Load("config.xml");
 
@@ -81,9 +92,14 @@ public class Experiment : MonoBehaviour
     {
         Blocks.Add(Block.Instantiate(name));
 
-        LoadScene(name+"_instructions", false);
+        LoadScene(name+"_instructions");
         menue.enabled = false;
         ContinueButton.Activate();
+
+        if (ReplayMode)
+            CurrentBlock.OpenFromReplay();
+        else
+            CurrentBlock.OpenLive();
     }
 
     // Update is called once per frame
@@ -91,30 +107,18 @@ public class Experiment : MonoBehaviour
     private bool IsLoading = false;
     void Update()
     {
-        if (Replay.IsReady)
-            Replay.WriteCurrentState();
-
         FPS = 1.0f / Time.deltaTime;
-        if (Input.GetKeyUp("escape"))
+        if (Input.GetButtonDown("CloseApp"))
         {
-            Measurement.Save();
+            Measurement.SaveAll();
             Application.Quit();
         }
 
-        
-        if (Input.GetKeyUp("space"))
+        // UNCOMMENT FOR REPLAY FUNCTIONALITY
+        if (Input.GetButtonDown("StartReplay"))
         {
-            Replay.Save("VPN"+ Measurement.VPN_Num.ToString() + ".replay");
-            //EventSystem.current.currentInputModule.inputOverride = gameObject.AddComponent(typeof(ReplayInput)) as ReplayInput;
         }
-
-        if (Input.GetKeyUp("a"))
-        {
-            EventSystem.current.currentInputModule.input.enabled = false;
-            EventSystem.current.currentInputModule.inputOverride = gameObject.AddComponent(typeof(ReplayInput)) as ReplayInput;
-            (EventSystem.current.currentInputModule.inputOverride as ReplayInput).Init("VPN123.replay");
-        }
-        
+        //
 
         /*if (Input.GetKeyUp("space") && trialPrefix != null)
         {
@@ -128,29 +132,13 @@ public class Experiment : MonoBehaviour
     {
         if(TrialIsActive)
             EndTrial();
-        if (!IsValidTrial( CurrentBlock.NextTrialName ))
-        {
-            //LoadScene("debriefing");
-            EndBlock();
-        }
+        bool trialValid = CurrentBlock.SetupNextTrial();
+        if (trialValid)
+            LoadScene(CurrentTrial<ITrial>().Name, CurrentBlock.GameBoardSceneName());
         else
-        {
-            string name = CurrentBlock.NextTrialName;
-            CurrentBlock.OpenTrial( name );
-            LoadScene( name );
-        }
+            EndBlock();
     }
 
-    private bool IsValidTrial(string name)
-    {
-        for (var i = 0; i < SceneManager.sceneCountInBuildSettings; i++)
-        {
-            string x = SceneUtility.GetScenePathByBuildIndex(i);
-            if (x.Contains("/"+ name + ".unity"))
-                return true;
-        }
-        return false;
-    }
 
     void OnGUI()
     {
@@ -169,8 +157,6 @@ public class Experiment : MonoBehaviour
         {
             Measurement.VPN_Num = parsedNum;
             SetUIStatus(true);
-
-            Replay.StartRecording();
         }
         else
             SetUIStatus(false);
@@ -183,12 +169,30 @@ public class Experiment : MonoBehaviour
         foreach (var button in lockableButtons)
         {
             button.GetComponent<Button>().interactable = active;
+            var c = button.GetComponent<Image>().color;
             if (active)
-                button.GetComponent<Image>().color = new Color(1, 1, 1, 1);
+                c.a = 1.0f;
             else
-                button.GetComponent<Image>().color = new Color(1, 1, 1, 0.5f);
+                c.a = 0.5f;
+            button.GetComponent<Image>().color = c;
         }
 
+    }
+
+    public bool ReplayMode { get; private set; }
+    public void SetReplayMode(bool active)
+    {
+        ReplayMode = active;
+    }
+
+    public ReplayInput ActivateReplayInput()
+    {
+        EventSystem.current.currentInputModule.inputOverride = gameObject.AddComponent(typeof(ReplayInput)) as ReplayInput;
+        return EventSystem.current.currentInputModule.inputOverride as ReplayInput;
+    }
+    public void DectivateReplayInput()
+    {
+        EventSystem.current.currentInputModule.inputOverride = null;
     }
 
     /* IDX
@@ -202,19 +206,19 @@ public class Experiment : MonoBehaviour
      * scene 1
      */
     bool BoardLoaded = false;
-    private void LoadScene(string name, bool withBoard = true)
+    private void LoadScene(string name, string boardName = null)
     {
         IsLoading = true;
         //Debug.Log("Load " + name + (withBoard ? " with board" : " without board"));
         //unload board first, if needed
-        if (BoardLoaded && !withBoard)
+        if (BoardLoaded && (boardName == null))
         {
             //Debug.Log("unload board");
             AsyncOperation unloading = SceneManager.UnloadSceneAsync(SceneManager.GetSceneAt(1));
             unloading.completed += (operation) =>
             {
                 BoardLoaded = false;
-                this.LoadScene(name, withBoard);
+                this.LoadScene(name, null);
             };
             return;
         }
@@ -227,16 +231,16 @@ public class Experiment : MonoBehaviour
             AsyncOperation unloading = SceneManager.UnloadSceneAsync(SceneManager.GetSceneAt(SceneManager.sceneCount - 1));
             unloading.completed += (operation) =>
             {
-                this.LoadScene(name, withBoard);
+                this.LoadScene(name, boardName);
             };
             return;
         }
 
         //load board if needed
-        if (withBoard && !BoardLoaded)
+        if ((boardName != null) && !BoardLoaded)
         {
             //Debug.Log("load board");
-            SceneManager.LoadScene("board", LoadSceneMode.Additive);
+            SceneManager.LoadScene(boardName, LoadSceneMode.Additive);
             BoardLoaded = true;
         }
 
@@ -257,16 +261,23 @@ public class Experiment : MonoBehaviour
 
     public void EndTrial()
     {
-        CurrentTrial<ITrial>().Close();
+        bool blockFinished = CurrentBlock.EndCurrentTrial();
+        if (blockFinished)
+            EndBlock();
     }
 
     private void EndBlock()
     {
         //Debug.Log("EndBlock: " + trialPrefix);
         CurrentBlock.Close();
-        Measurement.Save();
-        LoadScene(null, false);
+        //LoadScene("debriefing");
+        LoadScene(null);
         menue.enabled = true;
         ContinueButton.Deactivate();
+    }
+
+    public void SetTestMode(bool value)
+    {
+        TestMode = value;
     }
 }

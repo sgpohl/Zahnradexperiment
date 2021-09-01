@@ -3,13 +3,16 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.IO;
 using System.Text;
+using UnityEngine.SceneManagement;
 
+///Organizes data exchange on the block (inter-trial) level.
+///Manages Trial lifetime.
 public abstract class Block
 {
     public string Config { get; private set; }
     public List<ITrial> Trials { get; private set; }
     public ITrial CurrentTrial
-    { 
+    {
         get
         {
             if (Trials.Count == 0)
@@ -18,15 +21,18 @@ public abstract class Block
         }
     }
     public int TrialCount { get { return Trials.Count; } }
+    protected virtual int GetNextTrialNumber() { return TrialCount + 1; }
     public string NextTrialName
     {
-        get { return Config + (TrialCount + 1).ToString(); }
+        get { return Config + GetNextTrialNumber().ToString(); }
     }
-    
+    public virtual string GameBoardSceneName() { return null; }
 
+    private ReplayInput.Data Replay = null;
     public Block()
     {
         Trials = new List<ITrial>();
+        Replay = new ReplayInput.Data();
     }
 
     protected abstract ITrial InstantiateTrial(string name);
@@ -34,6 +40,31 @@ public abstract class Block
     {
         Trials.Add(InstantiateTrial(name));
     }
+    public virtual bool EndCurrentTrial()
+    {
+        CurrentTrial.Close();
+        return false;
+    }
+
+    private bool IsValidTrial(string name)
+    {
+        for (var i = 0; i < SceneManager.sceneCountInBuildSettings; i++)
+        {
+            string x = SceneUtility.GetScenePathByBuildIndex(i);
+            if (x.Contains("/" + name + ".unity"))
+                return true;
+        }
+        return false;
+    }
+    public bool SetupNextTrial()
+    {
+        if (!IsValidTrial(NextTrialName))
+            return false;
+
+        OpenTrial(NextTrialName);
+        return true;
+    }
+
 
     public static Block Instantiate(string name)
     {
@@ -42,19 +73,34 @@ public abstract class Block
         switch (name)
         {
             case "carousel":
-                b = new CarouselBlock();
+                b = new CogBlock<CarouselTrial>();
                 break;
             case "propeller":
-                b = new PropellerBlock();
+                b = new CogBlock<PropellerTrial>();
                 break;
             case "speed":
-                b = new SpeedBlock();
+                b = new CogBlock<SpeedTrial>();
                 break;
             case "training":
-                b = new CogBlock();
+                b = new CogBlock<CogTrial>();
                 break;
             case "direction":
-                b = new DirectionBlock();
+                b = new CogBlock<DirectionTrial>();
+                break;
+            case "trainingStability":
+                b = new GenericBlock<StabilityTrial>();
+                break;
+            case "stabilityGreen":
+                b = new GenericBlock<GreenStabilityTrial>();
+                break;
+            case "stabilityRed":
+                b = new RedStabilityBlock();
+                break;
+            case "matrix":
+                b = new SelectionBlock();
+                break;
+            case "vocabulary":
+                b = new VocabularyBlock();
                 break;
             default:
                 throw new System.ArgumentException("Tried to instantiate a block with an unknown type: '" + name + "'");
@@ -63,63 +109,141 @@ public abstract class Block
         return b;
     }
 
-    string resultsString = "";
+    bool replayMode = false;
+    public void OpenLive()
+    {
+        replayMode = false;
+        Replay.StartRecording();
+    }
+
+    public string FileName {    get {   return "VPN" + Experiment.Measurement.VPN_Num.ToString()+"_"+ Config;   }   }
+    public void OpenFromReplay()
+    {
+        replayMode = true;
+
+        var replayInput = Experiment.Instance.ActivateReplayInput();
+        replayInput.Init(FileName + ".replay");
+    }
+
     public void Close()
     {
-        resultsString = Aggregate(Experiment.Measurement.CurrentBlock);
+        if (replayMode)
+        {
+            Experiment.Instance.DectivateReplayInput();
+            return;
+        }
+
+        Experiment.Measurement.SaveCurrentBlock();
+        Replay.Save(FileName + ".replay");
     }
 
     public void Update(float DeltaTime)
     {
-        if(TrialCount > 0)
+        if (Replay.IsReady)
+            Replay.WriteCurrentState();
+        if (TrialCount > 0)
             CurrentTrial.Update(DeltaTime);
     }
 
-    public virtual string Aggregate(Measurement.Block data)
+    protected virtual string Aggregate(Measurement.Block data, string header)
     {
         var returnString = new StringBuilder(data.Typ);
+        if(header != null)
+            returnString.AppendFormat("\n,{0}", header);
+        returnString.Append("\n");
         foreach (var trial in Trials)
-            returnString.AppendFormat("\n{0}", trial.ToString(","));
+            returnString.Append(trial.ToString(","));
         return returnString.ToString();
     }
-}
-
-public class CogBlock : Block
-{
-    protected override ITrial InstantiateTrial(string name)
+    public virtual string Aggregate(Measurement.Block data)
     {
-        return new CogTrial(name);
+        return Aggregate(data, null);
     }
 }
 
-public class SpeedBlock : Block
+public class GenericBlock<T> : Block where T : ITrial, new()
 {
     protected override ITrial InstantiateTrial(string name)
     {
-        return new SpeedTrial(name);
+        T t = new T();
+        t.Name = name;
+        return t;
     }
 }
 
-public class DirectionBlock : Block
+public class CogBlock<T> : GenericBlock<T> where T : ITrial, new()
 {
-    protected override ITrial InstantiateTrial(string name)
+    public override string GameBoardSceneName() { return "board"; }
+}
+
+public class SelectionBlock : GenericBlock<SelectionTrial>
+{
+    public override string Aggregate(Measurement.Block data)
     {
-        return new DirectionTrial(name);
+        return base.Aggregate(data, "RT-Erstauswahl,RT-LetzteWahl,RT-Gesamt,AnzahlSelektionen,RESP,CRESP");
     }
 }
 
-public class PropellerBlock : Block
+public class VocabularyBlock : SelectionBlock
 {
-    protected override ITrial InstantiateTrial(string name)
+    private const int StartLevel = 13;
+
+    private int CurrentLevel = StartLevel;
+    private int points = StartLevel-1;
+    protected override int GetNextTrialNumber()
     {
-        return new PropellerTrial(name);
+        return CurrentLevel+1;
+    }
+
+    public override bool EndCurrentTrial()
+    {
+        var trial = CurrentTrial as SelectionTrial;
+
+        if (trial.Answer == ITrial.AnswerType.CORRECT && CurrentLevel >= StartLevel)
+            points++;
+
+        if (trial.Answer != ITrial.AnswerType.CORRECT && CurrentLevel < StartLevel)
+            points--;
+
+        if (CurrentLevel == StartLevel)
+            CurrentLevel++;
+        else if(CurrentLevel == StartLevel+1)
+        {
+            if (trial.Answer == ITrial.AnswerType.CORRECT)
+                CurrentLevel = StartLevel+2;
+            else
+                CurrentLevel = StartLevel-1;
+        }
+        else if(CurrentLevel == StartLevel-1)
+        {
+            CurrentLevel--;
+        }
+        else if (CurrentLevel < StartLevel-1)
+        {
+            var prevTrial = Trials[Trials.Count - 2] as SelectionTrial;
+            if (trial.Answer == ITrial.AnswerType.CORRECT && prevTrial.Answer == ITrial.AnswerType.CORRECT)
+                CurrentLevel = StartLevel + 2;
+            else
+                CurrentLevel--;
+        }
+        else
+        {
+            var trial2 = Trials[Trials.Count - 2] as SelectionTrial;
+            var trial3 = Trials[Trials.Count - 3] as SelectionTrial;
+            if (trial.Answer != ITrial.AnswerType.CORRECT && trial2.Answer != ITrial.AnswerType.CORRECT && trial3.Answer != ITrial.AnswerType.CORRECT)
+                return true;
+            else
+                CurrentLevel++;
+        }
+        return base.EndCurrentTrial();
     }
 }
 
-public class CarouselBlock : Block
+
+public class RedStabilityBlock : GenericBlock<RedStabilityTrial>
 {
-    protected override ITrial InstantiateTrial(string name)
+    public override string Aggregate(Measurement.Block data)
     {
-        return new CarouselTrial(name);
+        return base.Aggregate(data, "RT-Erstauswahl,RT-LetzteWahl,RT-Gesamt,AnzahlSelektionen,RESP,CRESP");
     }
 }
