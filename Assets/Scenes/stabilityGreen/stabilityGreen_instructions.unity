@@ -130,6 +130,12 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 303862391086869193, guid: 04143813b3d265648a638d9026631d89, type: 3}
+      propertyPath: m_Text
+      value: "Die folgenden Konstruktionen aus Bausteinen \nw\xFCrden ohne deine
+        Hilfe umfallen.\nPlatziere einen blauen Stein so, dass alle Bausteine\nstehen
+        bleiben."
+      objectReference: {fileID: 0}
     - target: {fileID: 303862391086869195, guid: 04143813b3d265648a638d9026631d89, type: 3}
       propertyPath: m_RootOrder
       value: 0
