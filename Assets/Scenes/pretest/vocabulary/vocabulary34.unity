@@ -350,7 +350,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 303862391086869193, guid: 04143813b3d265648a638d9026631d89, type: 3}
       propertyPath: m_Text
-      value: Zielwort
+      value: 'Zeige mir: Zylinder'
       objectReference: {fileID: 0}
     - target: {fileID: 303862391086869195, guid: 04143813b3d265648a638d9026631d89, type: 3}
       propertyPath: m_RootOrder
@@ -600,7 +600,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5988900415369456987, guid: d88cb6c38f6dc074d9c62e585de2b3c3, type: 3}
       propertyPath: IstDieKorrekteLoesung
-      value: -1
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8119599863968485344, guid: d88cb6c38f6dc074d9c62e585de2b3c3, type: 3}
       propertyPath: m_Sprite

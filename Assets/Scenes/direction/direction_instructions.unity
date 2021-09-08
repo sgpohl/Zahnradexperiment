@@ -132,7 +132,8 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 303862391086869193, guid: 04143813b3d265648a638d9026631d89, type: 3}
       propertyPath: m_Text
-      value: "Drehrichtung:\nDie Drehrichtung des Zielzahnrads ausw\xE4hlen."
+      value: "Drehrichtung:\nW\xE4hle aus, in welche Richtung sich das Zielzahnrad
+        drehen wird."
       objectReference: {fileID: 0}
     - target: {fileID: 303862391086869195, guid: 04143813b3d265648a638d9026631d89, type: 3}
       propertyPath: m_RootOrder
