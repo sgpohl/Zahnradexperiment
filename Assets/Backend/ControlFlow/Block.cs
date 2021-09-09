@@ -91,13 +91,13 @@ public abstract class Block
                 b = new GenericBlock<StabilityTrial>();
                 break;
             case "stabilityGreen":
-                b = new GenericBlock<GreenStabilityTrial>();
+                b = new GenericBlock<GreenStabilityTrial>("AnzahlVersuche, Antwortkoordinaten, RT1, RT2, RT3, RT-Gesamt");
                 break;
             case "stabilityRed":
-                b = new RedStabilityBlock();
+                b = new GenericBlock<RedStabilityTrial>("RT-Erstauswahl,RT-LetzteWahl,RT-Gesamt,AnzahlSelektionen,RESP,CRESP");
                 break;
             case "matrix":
-                b = new SelectionBlock();
+                b = new GenericBlock<SelectionTrial>();
                 break;
             case "vocabulary":
                 b = new VocabularyBlock();
@@ -163,11 +163,25 @@ public abstract class Block
 
 public class GenericBlock<T> : Block where T : ITrial, new()
 {
+    protected string MeasurementHeader = null;
+    public GenericBlock()
+    {
+    }
+    public GenericBlock(string header)
+    {
+        MeasurementHeader = header;
+    }
+
     protected override ITrial InstantiateTrial(string name)
     {
         T t = new T();
         t.Name = name;
         return t;
+    }
+
+    public override string Aggregate(Measurement.Block data)
+    {
+        return base.Aggregate(data, MeasurementHeader);
     }
 }
 
@@ -178,9 +192,8 @@ public class CogBlock<T> : GenericBlock<T> where T : ITrial, new()
 
 public class SelectionBlock : GenericBlock<SelectionTrial>
 {
-    public override string Aggregate(Measurement.Block data)
+    public SelectionBlock() : base("RT-Erstauswahl,RT-LetzteWahl,RT-Gesamt,AnzahlSelektionen,RESP,CRESP")
     {
-        return base.Aggregate(data, "RT-Erstauswahl,RT-LetzteWahl,RT-Gesamt,AnzahlSelektionen,RESP,CRESP");
     }
 }
 
@@ -236,14 +249,5 @@ public class VocabularyBlock : SelectionBlock
                 CurrentLevel++;
         }
         return base.EndCurrentTrial();
-    }
-}
-
-
-public class RedStabilityBlock : GenericBlock<RedStabilityTrial>
-{
-    public override string Aggregate(Measurement.Block data)
-    {
-        return base.Aggregate(data, "RT-Erstauswahl,RT-LetzteWahl,RT-Gesamt,AnzahlSelektionen,RESP,CRESP");
     }
 }

@@ -101,6 +101,7 @@ public class GreenStabilityTrial : StabilityTrial, ISelectorTrial<Auswahlsymbol>
 {
     private Auswahlsymbol Selector;
     private const int MaxIterations = 3;
+    private const int SimulationDuration = 3000;
     private int Iteration = 0;
 
     private System.Diagnostics.Stopwatch timer;
@@ -111,12 +112,12 @@ public class GreenStabilityTrial : StabilityTrial, ISelectorTrial<Auswahlsymbol>
     public override void Update(float DeltaTime)
     {
         base.Update(DeltaTime);
-        if(timer.ElapsedMilliseconds > 3000)
+        if(timer.ElapsedMilliseconds > SimulationDuration)
         {
             timer.Stop();
             timer.Reset();
 
-            if (Iteration < 3)
+            if (Iteration < MaxIterations)
             {
                 foreach (var block in Blocks)
                 {
@@ -147,21 +148,26 @@ public class GreenStabilityTrial : StabilityTrial, ISelectorTrial<Auswahlsymbol>
         Selector = s;
     }
 
+    private Bauklotz Solution
+    {
+        get
+        {
+            foreach (var block in SolutionBlocks)
+                if (IsCorrectlyPlaced(block))
+                    return block;
+            return null;
+        }
+    }
+    private bool IsSolved { get { return Solution != null; } }
+
     public void SelectAnswer(Auswahlsymbol selected)
     {
         if (selected != Selector)
             return;
 
-        bool correct = false;
-        foreach (var block in Blocks)
-        {
-            if (block.IsFixedInPlace)
-                continue;
-            if (IsCorrectlyPlaced(block))
-                correct = true;
-        }
+        Experiment.Measurement.MeasureSelection(0, IsSolved);
 
-        if (!correct)
+        if (!IsSolved)
         {
             foreach (var block in Blocks)
                 block.UnlockMovement();
@@ -188,6 +194,45 @@ public class GreenStabilityTrial : StabilityTrial, ISelectorTrial<Auswahlsymbol>
                 block.ResetPosition();
                 block.Show();
             }
+    }
+
+    public override void Aggregate(Measurement.Trial data)
+    {
+        long[] RT = new long[MaxIterations];
+        long RT_total = 0;
+        int attempts = Iteration;
+
+        if (!IsSolved)
+            attempts = 4;
+
+
+        Vector2 coords = new Vector2();
+        if (Solution != null)
+            coords = Solution.transform.position;
+
+        int clicks = 0;
+        for (int i = 0; i < data.Interaktionen.Count; ++i)
+        {
+            if (data.Interaktionen[i] is Measurement.Optionsauswahl)
+            {
+                if (clicks > Iteration)
+                    throw new Exception("Collected more Selections than Iterations in a GreenStabilityTrial");
+
+                RT[clicks] = data.Interaktionen[i].Zeitpunkt - SimulationDuration*clicks;
+                RT_total = RT[clicks];
+
+                clicks++;
+            }
+        }
+
+        for(int i = Iteration - 1; i>0; --i)
+            RT[i] -= RT[i - 1];
+
+
+        var z2 = new StringBuilder();
+        var info = System.Globalization.CultureInfo.InvariantCulture;
+        z2.AppendFormat("{0},({1};{2}),{3},{4},{5},{6}", attempts, coords.x.ToString("#0.00", info), coords.y.ToString("#0.00", info), RT[0], RT[1], RT[2], RT_total);
+        results.Add(z2);
     }
 }
 
