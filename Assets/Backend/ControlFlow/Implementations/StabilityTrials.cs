@@ -201,9 +201,10 @@ public class GreenStabilityTrial : StabilityTrial, ISelectorTrial<Auswahlsymbol>
         long[] RT = new long[MaxIterations];
         long RT_total = 0;
         int attempts = Iteration;
+        int CRESP = IsSolved ? 1 : 0;
 
-        if (!IsSolved)
-            attempts = 4;
+        //if (!IsSolved)
+        //    attempts = 4;
 
 
         Vector2 coords = new Vector2();
@@ -231,7 +232,7 @@ public class GreenStabilityTrial : StabilityTrial, ISelectorTrial<Auswahlsymbol>
 
         var z2 = new StringBuilder();
         var info = System.Globalization.CultureInfo.InvariantCulture;
-        z2.AppendFormat("{0},({1};{2}),{3},{4},{5},{6}", attempts, coords.x.ToString("#0.00", info), coords.y.ToString("#0.00", info), RT[0], RT[1], RT[2], RT_total);
+        z2.AppendFormat("{0},{1},({2};{3}),{4},{5},{6},{7}", CRESP, attempts, coords.x.ToString("#0.00", info), coords.y.ToString("#0.00", info), RT[0], RT[1], RT[2], RT_total);
         results.Add(z2);
     }
 }
