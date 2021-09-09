@@ -84,7 +84,7 @@ public class Spielbrett : MonoBehaviour
         o.transform.localScale *= Rastergroesse * 0.20f;
 
         SpriteRenderer renderer = o.AddComponent<SpriteRenderer>();
-        renderer.sortingOrder = 0;
+        renderer.sortingOrder = -1;
         /*
         Color tmp = renderer.color;
         tmp.r = 0.4f;

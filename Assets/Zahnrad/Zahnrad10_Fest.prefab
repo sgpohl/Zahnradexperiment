@@ -90,6 +90,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Zahnrad10
       objectReference: {fileID: 0}
+    - target: {fileID: 8855342915060690416, guid: df13e0a88cd30f841a69cfeac73698bc, type: 3}
+      propertyPath: m_SortingOrder
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: df13e0a88cd30f841a69cfeac73698bc, type: 3}
 --- !u!4 &4911585400965743642 stripped
@@ -104,6 +108,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 4911585400965743642}
     m_Modifications:
+    - target: {fileID: 683192179665242785, guid: 53de77f604eb4e24eb040a0830012e6e, type: 3}
+      propertyPath: m_SortingOrder
+      value: 2
+      objectReference: {fileID: 0}
     - target: {fileID: 3086175576726128325, guid: 53de77f604eb4e24eb040a0830012e6e, type: 3}
       propertyPath: m_RootOrder
       value: 0
@@ -159,6 +167,10 @@ PrefabInstance:
     - target: {fileID: 3374485826523421578, guid: 53de77f604eb4e24eb040a0830012e6e, type: 3}
       propertyPath: m_Name
       value: Fixierung
+      objectReference: {fileID: 0}
+    - target: {fileID: 8036994613482680011, guid: 53de77f604eb4e24eb040a0830012e6e, type: 3}
+      propertyPath: m_SortingOrder
+      value: 2
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 53de77f604eb4e24eb040a0830012e6e, type: 3}
