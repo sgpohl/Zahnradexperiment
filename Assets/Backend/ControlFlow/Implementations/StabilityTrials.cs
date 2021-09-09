@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Text;
 using System.Linq;
+using System;
 
 public class StabilityTrial : ITrial, ITrialFunctionality<Bauklotz>
 {
@@ -90,6 +91,10 @@ public class StabilityTrial : ITrial, ITrialFunctionality<Bauklotz>
     public virtual void SolutionBlockSelected(Bauklotz b)
     {
     }
+
+    public virtual void SolutionBlockReleased(Bauklotz b)
+    {
+    }
 }
 
 public class GreenStabilityTrial : StabilityTrial, ISelectorTrial<Auswahlsymbol>
@@ -117,6 +122,7 @@ public class GreenStabilityTrial : StabilityTrial, ISelectorTrial<Auswahlsymbol>
                 {
                     block.ResetPosition();
                     block.LockMovement();
+                    block.Show();
                 }
                 Selector.Deselect();
             }
@@ -166,9 +172,22 @@ public class GreenStabilityTrial : StabilityTrial, ISelectorTrial<Auswahlsymbol>
 
     public override void SolutionBlockSelected(Bauklotz b)
     {
+        b.Show();
         foreach (var block in SolutionBlocks)
             if (block != b)
+            {
                 block.ResetPosition();
+                block.Hide();
+            }
+    }
+    public override void SolutionBlockReleased(Bauklotz b)
+    {
+        foreach (var block in SolutionBlocks)
+            if (block != b)
+            {
+                block.ResetPosition();
+                block.Show();
+            }
     }
 }
 

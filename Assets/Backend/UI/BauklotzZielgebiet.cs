@@ -4,11 +4,11 @@ using UnityEngine;
 
 public class BauklotzZielgebiet : MonoBehaviour
 {
-    public BoxCollider2D Collider { get; private set; }
+    public Collider2D Collider { get; private set; }
 
     void Awake()
     {
-        Collider = GetComponent<BoxCollider2D>();
+        Collider = GetComponent<Collider2D>();
         //Collider.enabled = false;
     }
 

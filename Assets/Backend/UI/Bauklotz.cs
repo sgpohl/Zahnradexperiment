@@ -6,11 +6,12 @@ using UnityEngine;
 public class Bauklotz : MonoBehaviour
 {
     public bool IsFixedInPlace = false;
-    public BoxCollider2D Collider { get; private set; }
+    public Collider2D Collider { get; private set; }
 
     private Rigidbody2D PhysicsBody;
     private Vector3 defaultPosition;
     private Quaternion defaultRotation;
+    private Color defaultColor;
 
     public class DragNDrop : DragNDrop<Bauklotz>
     {
@@ -22,7 +23,7 @@ public class Bauklotz : MonoBehaviour
 
     private void Awake()
     {
-        Collider = GetComponent<BoxCollider2D>();
+        Collider = GetComponent<Collider2D>();
         PhysicsBody = GetComponent<Rigidbody2D>();
 
         Movement = gameObject.AddComponent(typeof(Bauklotz.DragNDrop)) as Bauklotz.DragNDrop;
@@ -30,7 +31,7 @@ public class Bauklotz : MonoBehaviour
         Movement.Enabled = !this.IsFixedInPlace;
         Movement.IsInBounds = (Vector2 pos) => { return this.Collider.OverlapPoint(pos); };
         Movement.SelectionCallback = NotifyOfSelection;
-        //Movement.DeselectionCallback = this.CursorDeselect;
+        Movement.DeselectionCallback = NotifyOfDeselection;
 
         Movement.SelectionScale = 1.05f;
     }
@@ -39,6 +40,7 @@ public class Bauklotz : MonoBehaviour
     {
         defaultPosition = transform.position;
         defaultRotation = transform.rotation;
+        defaultColor = GetComponent<SpriteRenderer>().color;
 
         CurrentTrial.Register(this);
     }
@@ -62,11 +64,25 @@ public class Bauklotz : MonoBehaviour
             return;
         PhysicsBody.freezeRotation = true;
         PhysicsBody.gravityScale = 0;
+        PhysicsBody.velocity = Vector2.zero;
+        PhysicsBody.angularVelocity = 0;
 
         if (this.IsFixedInPlace)
             PhysicsBody.isKinematic = true;
         else
             Movement.Enabled = true;
+    }
+
+    public void Hide()
+    {
+        GetComponent<SpriteRenderer>().enabled = false;
+        Debug.Log("Hide " + gameObject.ToString());
+    }
+
+    public void Show()
+    {
+        GetComponent<SpriteRenderer>().enabled = true;
+        Debug.Log("Show " + gameObject.ToString());
     }
 
     public void ResetPosition()
@@ -77,6 +93,10 @@ public class Bauklotz : MonoBehaviour
     public void NotifyOfSelection(Vector2 pos)
     {
         CurrentTrial.SolutionBlockSelected(this);
+    }
+    public void NotifyOfDeselection(Vector2 pos)
+    {
+        CurrentTrial.SolutionBlockReleased(this);
     }
 
     // Update is called once per frame
@@ -98,12 +118,7 @@ public class Bauklotz : MonoBehaviour
         }
         else
         {
-            Color tmp = GetComponent<SpriteRenderer>().color;
-            tmp.r = 1.0f;
-            tmp.b = 1.0f;
-            tmp.g = 1.0f;
-            tmp.a = 1.0f;
-            GetComponent<SpriteRenderer>().color = tmp;
+            GetComponent<SpriteRenderer>().color = defaultColor;
         }
     }
 

@@ -95,7 +95,7 @@ GameObject:
   - component: {fileID: 5935989233937866275}
   - component: {fileID: 5988900415369456987}
   m_Layer: 0
-  m_Name: Selector1
+  m_Name: MatrixSelector
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
