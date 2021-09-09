@@ -38,12 +38,16 @@ public class Spielbrett : MonoBehaviour
         if (!Contains(x, y))
             return new Vector2(x, y);
 
-        float xo = spRenderer.bounds.extents.x % Rastergroesse;
-        float yo = spRenderer.bounds.extents.y % Rastergroesse;
+
+        float xo = (spRenderer.bounds.size.x % Rastergroesse) / 2;
+        float yo = (spRenderer.bounds.size.y % Rastergroesse) / 2;
+        Vector2 frameOffset = new Vector2(xo, yo);
+        Vector2 boardOffset = transform.position - spRenderer.bounds.size / 2;
+        boardOffset += frameOffset;
 
         float g = Rastergroesse;
-        x += g / 2 +xo;
-        y += g / 2;
+        x += 0 / 2 - boardOffset.x;
+        y += 0 / 2 - boardOffset.y;
         int ix = (int)(x / g);
         if (x < 0)
             ix--;
@@ -51,7 +55,9 @@ public class Spielbrett : MonoBehaviour
         if (y < 0)
             iy--;
 
-        return new Vector2(ix * Rastergroesse -xo, iy * Rastergroesse);
+        float innerCellOffset = 0.5f;
+        Vector2 cellMidpoint = new Vector2((ix + innerCellOffset) * Rastergroesse, (iy + innerCellOffset) * Rastergroesse);
+        return cellMidpoint + boardOffset;
     }
 
     private void Init()
@@ -60,8 +66,8 @@ public class Spielbrett : MonoBehaviour
             spRenderer = GetComponent<SpriteRenderer>();
         if (Rastergroesse > 0)
         {
-            float xo = spRenderer.bounds.extents.x % Rastergroesse;
-            float yo = spRenderer.bounds.extents.y % Rastergroesse;
+            float xo = (spRenderer.bounds.size.x % Rastergroesse) / 2;
+            float yo = (spRenderer.bounds.size.y % Rastergroesse) / 2;
             for (float x = spRenderer.bounds.min.x+xo; x < spRenderer.bounds.max.x; x += Rastergroesse)
                 for (float y = spRenderer.bounds.min.y+yo; y < spRenderer.bounds.max.y; y += Rastergroesse)
                     AddPoint(x, y);
@@ -72,9 +78,10 @@ public class Spielbrett : MonoBehaviour
     {
         GameObject o = new GameObject("Point");
 
+
         o.transform.parent = this.transform;
         o.transform.position = new Vector3(x, y, 0);
-        o.transform.localScale *= Rastergroesse*0.15f;
+        o.transform.localScale *= Rastergroesse * 0.20f;
 
         SpriteRenderer renderer = o.AddComponent<SpriteRenderer>();
         renderer.sortingOrder = 0;
