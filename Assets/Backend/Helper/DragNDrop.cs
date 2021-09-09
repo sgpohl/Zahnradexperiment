@@ -13,6 +13,8 @@ public class DragNDrop<T>: MonoBehaviour, IPointerDownHandler, IPointerUpHandler
     public SelectionCallbackDelegate DeselectionCallback = delegate { };
     public float SelectionScale = 1.15f;
 
+    public Vector2 defaultScale;
+
     private bool _enabled = true;
     public bool Enabled
     {
@@ -42,6 +44,7 @@ public class DragNDrop<T>: MonoBehaviour, IPointerDownHandler, IPointerUpHandler
         FunctionalComponent = GetComponent<T>();
 
         sprite = GetComponent<SpriteRenderer>();
+        defaultScale = sprite.transform.localScale;
     }
 
     public void Update()
@@ -111,7 +114,7 @@ public class DragNDrop<T>: MonoBehaviour, IPointerDownHandler, IPointerUpHandler
 
             SelectionOffset = ((Vector2)gameObject.transform.position) - pos;
 
-            sprite.transform.localScale = Vector3.one * SelectionScale;
+            sprite.transform.localScale = defaultScale * SelectionScale;
             sprite.sortingOrder = 3;
 
             SelectionCallback(pos);
@@ -125,7 +128,7 @@ public class DragNDrop<T>: MonoBehaviour, IPointerDownHandler, IPointerUpHandler
             Vector2 pos = CursorWorldPosition;
             CursorSelected = false;
 
-            sprite.transform.localScale = Vector3.one;
+            sprite.transform.localScale = defaultScale;
             sprite.sortingOrder = 1;
             DeselectionCallback(pos);
         }
