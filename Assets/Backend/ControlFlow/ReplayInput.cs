@@ -42,20 +42,23 @@ public class ReplayInput : BaseInput
         return base.GetButtonDown(buttonName);
     }
 
+    public override int touchCount 
+        //=> base.touchCount;
+    { get { return touch.HasValue ? 1 : 0; } }
+
     public override Touch GetTouch(int index)
     {
-        /*var t = new Touch();
-        t.position = new Vector2(currentPoint.x, currentPoint.y);
-        t.pressure = 1.0f;
-        t.radius = 1.0f;
-        t.type = TouchType.Direct;*/
-        return base.GetTouch(index);
+        //return base.GetTouch(index);
+        return touch.Value;
     }
+
+    public Touch[] touches { get { return touch.HasValue ? new Touch[] { touch.Value } : new Touch[0]; } }
 
     private Data data = null;
     private Data.Point previousPoint;
     private Data.Point currentPoint;
     private Data.Point nextPoint;
+    private Touch? touch;
     private System.Diagnostics.Stopwatch timer;
     public void Init(string replayFile)
     {
@@ -100,6 +103,8 @@ public class ReplayInput : BaseInput
         currentPoint.x = nextPoint.x * posInterpolation + previousPoint.x * (1.0f - posInterpolation);
         currentPoint.y = nextPoint.y * posInterpolation + previousPoint.y * (1.0f - posInterpolation);
 
+        FakeTouch();
+
         //Debug.Log(currentPoint.dt.ToString()+","+currentPoint.MouseDown.ToString()+",("+currentPoint.x.ToString("0.0")+","+currentPoint.y.ToString("0.0") +")");
         //Debug.Log(currentPoint.dt.ToString()+","+currentPoint.MouseDown.ToString()+",("+currentPoint.x.ToString()+","+currentPoint.y.ToString()+")");
         //Debug.Log(Input.mousePosition.ToString());
@@ -121,6 +126,41 @@ public class ReplayInput : BaseInput
             go.transform.position = rpos;
             go.transform.localScale = Vector3.one * 0.4f;
         }
+    }
+
+    private void FakeTouch()
+    {
+        TouchPhase phase;
+        if (currentPoint.MouseDown && currentPoint.MouseChange)
+            phase = TouchPhase.Began;
+        else if (currentPoint.MouseDown && !currentPoint.MouseChange)
+            phase = TouchPhase.Moved;
+        else if (!currentPoint.MouseDown && currentPoint.MouseChange)
+            phase = TouchPhase.Ended;
+        else
+        {
+            touch = null;
+            return;
+        }
+
+        Vector2 newPos = new Vector2(currentPoint.x, currentPoint.y);
+        Vector2 oldPos;
+        if (touch.HasValue)
+            oldPos = touch.Value.position;
+        else
+            oldPos = newPos;
+
+        touch = new Touch
+        {
+            phase = phase,
+            type = TouchType.Direct,
+            position = newPos,
+            rawPosition = newPos,
+            fingerId = 0,
+            tapCount = 1,
+            deltaTime = Time.deltaTime,
+            deltaPosition = newPos-oldPos
+        };
     }
 
     public class Data
