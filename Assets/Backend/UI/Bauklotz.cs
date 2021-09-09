@@ -76,13 +76,11 @@ public class Bauklotz : MonoBehaviour
     public void Hide()
     {
         GetComponent<SpriteRenderer>().enabled = false;
-        Debug.Log("Hide " + gameObject.ToString());
     }
 
     public void Show()
     {
         GetComponent<SpriteRenderer>().enabled = true;
-        Debug.Log("Show " + gameObject.ToString());
     }
 
     public void ResetPosition()
