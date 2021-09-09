@@ -53,13 +53,19 @@ public class ReplayInput : BaseInput
     }
 
     private Data data = null;
+    private Data.Point previousPoint;
     private Data.Point currentPoint;
+    private Data.Point nextPoint;
     private System.Diagnostics.Stopwatch timer;
     public void Init(string replayFile)
     {
         data = new Data();
         timer = new System.Diagnostics.Stopwatch();
         data.Load(replayFile);
+
+        previousPoint = data.Next();
+        currentPoint = previousPoint;
+        nextPoint = data.Next();
 
         timer.Start();
     }
@@ -80,16 +86,25 @@ public class ReplayInput : BaseInput
             }
             return;
         }
-        if (timer.ElapsedMilliseconds < currentPoint.dt)
-            return;
-        timer.Restart();
-        currentPoint = data.Next();
+        if (timer.ElapsedMilliseconds > nextPoint.dt)
+        {
+            timer.Restart();
+            previousPoint = nextPoint;
+            currentPoint = previousPoint;
+            nextPoint = data.Next();
+        }
+        else
+            currentPoint.MouseChange = false;
+
+        float posInterpolation = (float)timer.ElapsedMilliseconds / (float)nextPoint.dt;
+        currentPoint.x = nextPoint.x * posInterpolation + previousPoint.x * (1.0f - posInterpolation);
+        currentPoint.y = nextPoint.y * posInterpolation + previousPoint.y * (1.0f - posInterpolation);
 
         //Debug.Log(currentPoint.dt.ToString()+","+currentPoint.MouseDown.ToString()+",("+currentPoint.x.ToString("0.0")+","+currentPoint.y.ToString("0.0") +")");
         //Debug.Log(currentPoint.dt.ToString()+","+currentPoint.MouseDown.ToString()+",("+currentPoint.x.ToString()+","+currentPoint.y.ToString()+")");
         //Debug.Log(Input.mousePosition.ToString());
 
-        if(MousePointerSurrogate == null)
+        if (MousePointerSurrogate == null)
         {
             MousePointerSurrogate = GameObject.CreatePrimitive(PrimitiveType.Sphere);
             MousePointerSurrogate.transform.localScale = Vector3.one * 0.5f;
