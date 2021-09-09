@@ -21,10 +21,10 @@ public abstract class Block
         }
     }
     public int TrialCount { get { return Trials.Count; } }
-    protected virtual int GetNextTrialNumber() { return TrialCount + 1; }
+    protected virtual string GetNextTrialPostfix() { return (TrialCount + 1).ToString(); }
     public string NextTrialName
     {
-        get { return Config + GetNextTrialNumber().ToString(); }
+        get { return Config + GetNextTrialPostfix().ToString(); }
     }
     public virtual string GameBoardSceneName() { return null; }
 
@@ -203,9 +203,9 @@ public class VocabularyBlock : SelectionBlock
 
     private int CurrentLevel = StartLevel;
     private int points = StartLevel-1;
-    protected override int GetNextTrialNumber()
+    protected override string GetNextTrialPostfix()
     {
-        return CurrentLevel+1;
+        return (CurrentLevel+1).ToString();
     }
 
     public override bool EndCurrentTrial()
