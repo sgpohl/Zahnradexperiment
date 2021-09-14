@@ -284,4 +284,16 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/stabilityGreen/stabilityGreen4.unity
     guid: adf4efa308f019a42b81c600bd4c8540
+  - enabled: 1
+    path: Assets/Scenes/stabilityGreen/stabilityGreen8.unity
+    guid: b74faa3d8da938b4b840118d2cb6f28d
+  - enabled: 1
+    path: Assets/Scenes/stabilityGreen/stabilityGreen7.unity
+    guid: 610e945b89118e042934fc11e5ff1f53
+  - enabled: 1
+    path: Assets/Scenes/stabilityGreen/stabilityGreen6.unity
+    guid: 7e6a4d64bcdb9ed4882c23070d4ebfb6
+  - enabled: 1
+    path: Assets/Scenes/stabilityGreen/stabilityGreen5.unity
+    guid: f9920d7a107093540b3e55c9ce7b738e
   m_configObjects: {}
