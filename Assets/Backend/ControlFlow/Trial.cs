@@ -133,7 +133,8 @@ public class SelectionTrial : ITrial, ISelectorTrial<Auswahlsymbol>
         }
 
         var z2 = new StringBuilder();
-        z2.AppendFormat("{0},{1},{2},{3},{4},{5}", RT1, RT2, data.Dauer, clicks, RESP, CRESP);
+        z2.Append(data.Name);
+        z2.AppendFormat(",{0},{1},{2},{3},{4},{5}", RT1, RT2, data.Dauer, clicks, RESP, CRESP);
         results.Add(z2);
     }
 }

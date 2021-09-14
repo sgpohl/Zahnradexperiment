@@ -130,8 +130,10 @@ public class Experiment : MonoBehaviour
 
     public void NextTrial()
     {
-        if(TrialIsActive)
+        if (TrialIsActive)
             EndTrial();
+        if (!CurrentBlock.IsOpen)
+            return;
         bool trialValid = CurrentBlock.SetupNextTrial();
         if (trialValid)
             LoadScene(CurrentTrial<ITrial>().Name, CurrentBlock.GameBoardSceneName());
@@ -268,7 +270,7 @@ public class Experiment : MonoBehaviour
 
     private void EndBlock()
     {
-        //Debug.Log("EndBlock: " + trialPrefix);
+        //Debug.Log("EndBlock: " + CurrentBlock.Config);
         CurrentBlock.Close();
         //LoadScene("debriefing");
         LoadScene(null);

@@ -97,10 +97,10 @@ public abstract class Block
                 b = new GenericBlock<RedStabilityTrial>("RT-Erstauswahl,RT-LetzteWahl,RT-Gesamt,AnzahlSelektionen,RESP,CRESP");
                 break;
             case "matrix":
-                b = new GenericBlock<SelectionTrial>();
+                b = new MatrixBlock(7, 3);
                 break;
             case "vocabulary":
-                b = new VocabularyBlock();
+                b = new VocabularyBlock(13);
                 break;
             default:
                 throw new System.ArgumentException("Tried to instantiate a block with an unknown type: '" + name + "'");
@@ -109,9 +109,11 @@ public abstract class Block
         return b;
     }
 
+    public bool IsOpen { private set; get; }
     bool replayMode = false;
     public void OpenLive()
     {
+        IsOpen = true;
         replayMode = false;
         Replay.StartRecording();
     }
@@ -119,6 +121,7 @@ public abstract class Block
     public string FileName {    get {   return "VPN" + Experiment.Measurement.VPN_Num.ToString()+"_"+ Config;   }   }
     public void OpenFromReplay()
     {
+        IsOpen = true;
         replayMode = true;
 
         var replayInput = Experiment.Instance.ActivateReplayInput();
@@ -127,6 +130,7 @@ public abstract class Block
 
     public void Close()
     {
+        IsOpen = false;
         if (replayMode)
         {
             Experiment.Instance.DectivateReplayInput();
@@ -157,7 +161,7 @@ public abstract class Block
     }
     public virtual string Aggregate(Measurement.Block data)
     {
-        return Aggregate(data, null);
+        return this.Aggregate(data, null);
     }
 }
 
@@ -181,7 +185,7 @@ public class GenericBlock<T> : Block where T : ITrial, new()
 
     public override string Aggregate(Measurement.Block data)
     {
-        return base.Aggregate(data, MeasurementHeader);
+        return this.Aggregate(data, MeasurementHeader);
     }
 }
 
@@ -190,22 +194,17 @@ public class CogBlock<T> : GenericBlock<T> where T : ITrial, new()
     public override string GameBoardSceneName() { return "board"; }
 }
 
-public class SelectionBlock : GenericBlock<SelectionTrial>
+public class PretestBlock : GenericBlock<SelectionTrial>
 {
-    public SelectionBlock() : base("RT-Erstauswahl,RT-LetzteWahl,RT-Gesamt,AnzahlSelektionen,RESP,CRESP")
-    {
-    }
-}
+    protected int StartLevel;
+    protected int CurrentLevel;
+    protected int points;
 
-public class VocabularyBlock : SelectionBlock
-{
-    private const int StartLevel = 13;
-
-    private int CurrentLevel = StartLevel;
-    private int points = StartLevel-1;
-    protected override string GetNextTrialPostfix()
+    public PretestBlock(int StartLevel) : base("Trial,RT-Erstauswahl,RT-LetzteWahl,RT-Gesamt,AnzahlSelektionen,RESP,CRESP")
     {
-        return (CurrentLevel+1).ToString();
+        this.StartLevel = StartLevel;
+        CurrentLevel = StartLevel;
+        points = StartLevel -1;
     }
 
     public override bool EndCurrentTrial()
@@ -218,20 +217,25 @@ public class VocabularyBlock : SelectionBlock
         if (trial.Answer != ITrial.AnswerType.CORRECT && CurrentLevel < StartLevel)
             points--;
 
+        //1st iteration
         if (CurrentLevel == StartLevel)
             CurrentLevel++;
-        else if(CurrentLevel == StartLevel+1)
+        //2nd iteration
+        else if (CurrentLevel == StartLevel + 1)
         {
-            if (trial.Answer == ITrial.AnswerType.CORRECT)
-                CurrentLevel = StartLevel+2;
+            var prevTrial = Trials[Trials.Count - 2] as SelectionTrial;
+            if (trial.Answer == ITrial.AnswerType.CORRECT && prevTrial.Answer == ITrial.AnswerType.CORRECT)
+                CurrentLevel = StartLevel + 2;
             else
-                CurrentLevel = StartLevel-1;
+                CurrentLevel = StartLevel - 1;
         }
-        else if(CurrentLevel == StartLevel-1)
+        //begin backwards movement
+        else if (CurrentLevel == StartLevel - 1)
         {
             CurrentLevel--;
         }
-        else if (CurrentLevel < StartLevel-1)
+        //continue backwards movement
+        else if (CurrentLevel < StartLevel - 1)
         {
             var prevTrial = Trials[Trials.Count - 2] as SelectionTrial;
             if (trial.Answer == ITrial.AnswerType.CORRECT && prevTrial.Answer == ITrial.AnswerType.CORRECT)
@@ -239,14 +243,71 @@ public class VocabularyBlock : SelectionBlock
             else
                 CurrentLevel--;
         }
+        //forward movement
         else
         {
             var trial2 = Trials[Trials.Count - 2] as SelectionTrial;
             var trial3 = Trials[Trials.Count - 3] as SelectionTrial;
             if (trial.Answer != ITrial.AnswerType.CORRECT && trial2.Answer != ITrial.AnswerType.CORRECT && trial3.Answer != ITrial.AnswerType.CORRECT)
+            {
+                CurrentTrial.Close();
                 return true;
+            }
             else
                 CurrentLevel++;
+        }
+        return base.EndCurrentTrial();
+    }
+
+    protected override string GetNextTrialPostfix()
+    {
+        return (CurrentLevel).ToString();
+    }
+
+    protected override string Aggregate(Measurement.Block data, string header)
+    {
+        var returnString = new StringBuilder(data.Typ);
+        returnString.AppendFormat(",Gesamtpunktzahl:,{0}", points);
+        if (header != null)
+            returnString.AppendFormat("\n,{0}", header);
+        returnString.Append("\n");
+        foreach (var trial in Trials)
+            returnString.Append(trial.ToString(","));
+        return returnString.ToString();
+    }
+}
+
+public class VocabularyBlock : PretestBlock
+{
+    public VocabularyBlock(int start) : base(start)
+    {
+    }
+}
+
+public class MatrixBlock : PretestBlock
+{
+    int MaxTrainingLevels;
+    int CurrentTrainingLevel;
+    public MatrixBlock(int start, int TrainingLevels) : base(start)
+    {
+        MaxTrainingLevels = TrainingLevels;
+        CurrentTrainingLevel = 1;
+    }
+
+    protected override string GetNextTrialPostfix()
+    {
+        if (CurrentTrainingLevel <= MaxTrainingLevels)
+            return "U" + (CurrentTrainingLevel).ToString();
+        return base.GetNextTrialPostfix();
+    }
+
+    public override bool EndCurrentTrial()
+    {
+        if (CurrentTrainingLevel <= MaxTrainingLevels)
+        {
+            CurrentTrainingLevel++;
+            CurrentTrial.Close();
+            return false;
         }
         return base.EndCurrentTrial();
     }
