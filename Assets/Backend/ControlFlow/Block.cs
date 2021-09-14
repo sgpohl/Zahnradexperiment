@@ -91,7 +91,7 @@ public abstract class Block
                 b = new GenericBlock<StabilityTrial>();
                 break;
             case "stabilityGreen":
-                b = new GenericBlock<GreenStabilityTrial>("CRESP,AnzahlVersuche,Antwortkoordinaten,RT1,RT2,RT3,RT-Gesamt");
+                b = new GenericBlock<GreenStabilityTrial>("RESP,CRESP,AnzahlVersuche,Antwortkoordinaten,RT1,RT2,RT3,RT-Gesamt");
                 break;
             case "stabilityRed":
                 b = new GenericBlock<RedStabilityTrial>("RT-Erstauswahl,RT-LetzteWahl,RT-Gesamt,AnzahlSelektionen,RESP,CRESP");

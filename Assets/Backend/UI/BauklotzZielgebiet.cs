@@ -5,6 +5,7 @@ using UnityEngine;
 public class BauklotzZielgebiet : MonoBehaviour
 {
     public Collider2D Collider { get; private set; }
+    public int Lösungsnummer = 0;
 
     void Awake()
     {

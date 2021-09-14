@@ -79,13 +79,12 @@ public class StabilityTrial : ITrial, ITrialFunctionality<Bauklotz>
         TargetAreas.Add(a);
     }
 
-    public bool IsCorrectlyPlaced(Bauklotz b)
+    public BauklotzZielgebiet IsCorrectlyPlaced(Bauklotz b)
     {
-        bool correct = false;
         foreach (BauklotzZielgebiet area in TargetAreas)
             if (area.ContainsCompletely(b))
-                correct = true;
-        return correct;
+                return area;
+        return null;
     }
 
     public virtual void SolutionBlockSelected(Bauklotz b)
@@ -148,17 +147,20 @@ public class GreenStabilityTrial : StabilityTrial, ISelectorTrial<Auswahlsymbol>
         Selector = s;
     }
 
-    private Bauklotz Solution
+    private Tuple<int, Bauklotz> Solution
     {
         get
         {
             foreach (var block in SolutionBlocks)
-                if (IsCorrectlyPlaced(block))
-                    return block;
-            return null;
+            {
+                var solutionArea = IsCorrectlyPlaced(block);
+                if (solutionArea != null)
+                    return new Tuple<int, Bauklotz>(solutionArea.Lösungsnummer, block);
+            }
+            return new Tuple<int, Bauklotz>(-1, null);
         }
     }
-    private bool IsSolved { get { return Solution != null; } }
+    private bool IsSolved { get { return Solution.Item2 != null; } }
 
     public void SelectAnswer(Auswahlsymbol selected)
     {
@@ -208,8 +210,8 @@ public class GreenStabilityTrial : StabilityTrial, ISelectorTrial<Auswahlsymbol>
 
 
         Vector2 coords = new Vector2();
-        if (Solution != null)
-            coords = Solution.transform.position;
+        if (Solution.Item2 != null)
+            coords = Solution.Item2.transform.position;
 
         int clicks = 0;
         for (int i = 0; i < data.Interaktionen.Count; ++i)
@@ -232,7 +234,7 @@ public class GreenStabilityTrial : StabilityTrial, ISelectorTrial<Auswahlsymbol>
 
         var z2 = new StringBuilder();
         var info = System.Globalization.CultureInfo.InvariantCulture;
-        z2.AppendFormat("{0},{1},({2};{3}),{4},{5},{6},{7}", CRESP, attempts, coords.x.ToString("#0.00", info), coords.y.ToString("#0.00", info), RT[0], RT[1], RT[2], RT_total);
+        z2.AppendFormat("{0},{1},{2},({3};{4}),{5},{6},{7},{8}", Solution.Item1, CRESP, attempts, coords.x.ToString("#0.00", info), coords.y.ToString("#0.00", info), RT[0], RT[1], RT[2], RT_total);
         results.Add(z2);
     }
 }
