@@ -209,7 +209,7 @@ public class RedStabilityBlock : GenericBlock<RedStabilityTrial>
     {
         if (CurrentTrainingLevel <= MaxTrainingLevels)
             return "U" + (CurrentTrainingLevel).ToString();
-        return base.GetNextTrialPostfix();
+        return (TrialCount + 1 - MaxTrainingLevels).ToString();
     }
 
     public override bool EndCurrentTrial()
