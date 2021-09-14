@@ -47,9 +47,13 @@ public class CogTrial : ITrial, ITrialFunctionality<Zahnrad>
     public void ConnectCog(Zahnrad cog)
     {
         cog.Disconnect();
+        if (!cog.OnBoard)
+            return;
         for (int i = 0; i < Cogs.Count; ++i)
         {
             if (Cogs[i] == cog)
+                continue;
+            if (!Cogs[i].OnBoard)
                 continue;
             if (Cogs[i].Intersects(cog))
             {
@@ -64,6 +68,8 @@ public class CogTrial : ITrial, ITrialFunctionality<Zahnrad>
         for (int i = 0; i < Cogs.Count; ++i)
         {
             if (Cogs[i] == cog)
+                continue;
+            if (!Cogs[i].OnBoard)
                 continue;
             if (cog.Overlaps(Cogs[i], pos))
                 return false;
@@ -87,6 +93,8 @@ public class CogTrial : ITrial, ITrialFunctionality<Zahnrad>
         for (int i = 0; i < Cogs.Count; ++i)
         {
             if (Cogs[i] == cog)
+                continue;
+            if (!Cogs[i].OnBoard)
                 continue;
             if (cog.Overlaps(Cogs[i], pos))
             {
