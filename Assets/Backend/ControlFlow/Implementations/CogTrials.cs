@@ -199,33 +199,79 @@ public class SpeedTrial : CogTrial, ISelectorTrial<Auswahlzahnrad>
     }
 }
 
-public class DirectionTrial : CogTrial, ISelectorTrial<Auswahlpfeil>
+public class DirectionTrial : CogTrial, ITrialFunctionality<Richtungssticker>//, ISelectorTrial<Auswahlpfeil>
 {
+    public List<Richtungssticker> SelectedDirections = null;
+    public DirectionTrial() : base()
+    {
+        SelectedDirections = new List<Richtungssticker>();
+    }
+
     public override void Aggregate(Measurement.Trial data)
     {
-        results.Add(new StringBuilder("RT-Erstauswahl,RT-LetzteWahl,RT-Gesamt,AnzahlSelektionen,RESP,CRESP"));
+        results.Add(new StringBuilder("RT-Gesamt,Zahnrad,RT-Erstauswahl,RT-LetzteWahl,AnzahlSelektionen,RESP,CRESP"));
 
-        long RT1 = 0;
-        long RT2 = 0;
-        int CRESP = -1;
-        int clicks = 0;
-        Direction RESP = Direction.INVALID;
+        List<int> indices = new List<int>();
+        for(int i = 0; i<Cogs.Count; ++i)
+        {
+            if (Cogs[i].IsStart)
+                continue;
+            indices.Add(i);
+        }
+
+        long[] RT1 = new long[indices.Count];
+        long[] RT2 = new long[indices.Count];
+        int[] CRESP = new int[indices.Count];
+        int[] clicks = new int[indices.Count];
+        Direction[] RESP = new Direction[indices.Count];
+
+        for(int i = 0; i<indices.Count; ++i)
+        {
+            RT1[i] = 0;
+            RT2[i] = 0;
+            CRESP[i] = -1;
+            clicks[i] = 0;
+            RESP[i] = Direction.INVALID;
+        }
+
         for (int i = 0; i < data.Interaktionen.Count; ++i)
         {
             if (data.Interaktionen[i] is Measurement.Richtungsauswahl)
             {
-                clicks++;
-                if (RT1 == 0)
-                    RT1 = data.Interaktionen[i].Zeitpunkt;
-                RT2 = data.Interaktionen[i].Zeitpunkt;
-                CRESP = (data.Interaktionen[i] as Measurement.Richtungsauswahl).CRESP ? 1 : 0;
-                RESP = (data.Interaktionen[i] as Measurement.Richtungsauswahl).Richtung;
+                var d = data.Interaktionen[i] as Measurement.Richtungsauswahl;
+                Debug.Log(d.ZahnradID.ToString() + " -> " + indices.IndexOf(d.ZahnradID));
+                int cidx = indices.IndexOf(d.ZahnradID);
+                if (cidx < 0)
+                    continue;
+
+                clicks[cidx]++;
+                if (RT1[cidx] == 0)
+                    RT1[cidx] = d.Zeitpunkt;
+                RT2[cidx] = d.Zeitpunkt;
+                CRESP[cidx] = d.CRESP ? 1 : 0;
+                RESP[cidx] = d.Richtung;
             }
         }
 
         var z2 = new StringBuilder();
-        z2.AppendFormat("{0},{1},{2},{3},{4},{5}", RT1, RT2, data.Dauer, clicks, RESP, CRESP);
+        z2.AppendFormat("{0},{1},{2},{3},{4},{5},{6}", data.Dauer, Cogs[indices[0]].Beschreibung, RT1[0], RT2[0], clicks[0], RESP[0], CRESP[0]);
         results.Add(z2);
+        for (int i = 1; i<indices.Count; ++i)
+        {
+            var zi = new StringBuilder();
+            zi.AppendFormat(",{0},{1},{2},{3},{4},{5}", Cogs[indices[i]].Beschreibung, RT1[i], RT2[i], clicks[i], RESP[i], CRESP[i]);
+            results.Add(zi);
+        }
+    }
+
+    public bool PositionIsValid(Vector2 pos, Richtungssticker cog)
+    {
+        return true;
+    }
+
+    public Vector2 NearestPositionCandidate(Vector2 pos, Richtungssticker cog)
+    {
+        return pos;
     }
 
     /* *
@@ -239,7 +285,22 @@ public class DirectionTrial : CogTrial, ISelectorTrial<Auswahlpfeil>
         INVALID = 0
     }
 
-    public Direction SelectedDirection { get; private set; }
+    public override void RegisterCog(Zahnrad cog)
+    {
+        SelectedDirections.Add(null);
+        base.RegisterCog(cog);
+    }
+
+    public void AttachSticker(Richtungssticker sticker, Zahnrad cog)
+    {
+        int idx = Cogs.IndexOf(cog);
+        if (idx < 0)
+            return;
+        if (SelectedDirections[idx] != null)
+            GameObject.Destroy(SelectedDirections[idx].gameObject);
+        SelectedDirections[idx] = sticker;
+        Experiment.Measurement.MeasureDirectionSelected(sticker.Direction, Cogs.IndexOf(cog), sticker.Direction == cog.Direction);
+    }
     /*
     public void SelectDirection(Direction dir, bool correct)
     {
@@ -247,6 +308,8 @@ public class DirectionTrial : CogTrial, ISelectorTrial<Auswahlpfeil>
         Experiment.Measurement.MeasureDirectionSelected(dir, correct);
     }
     */
+
+    /*
     private Auswahlpfeil CurrentSelector = null;
     public void SelectAnswer(Auswahlpfeil selected)
     {
@@ -268,6 +331,7 @@ public class DirectionTrial : CogTrial, ISelectorTrial<Auswahlpfeil>
     {
         return new List<Auswahlpfeil>();
     }
+    */
 }
 
 public class PropellerTrial : CogTrial

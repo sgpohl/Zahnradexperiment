@@ -39,7 +39,7 @@ public class DragNDrop<T>: MonoBehaviour, IPointerDownHandler, IPointerUpHandler
     private SpriteRenderer sprite;
 
 
-    void Start()
+    void Awake()
     {
         FunctionalComponent = GetComponent<T>();
 
