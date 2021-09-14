@@ -347,4 +347,19 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/stabilityRed/stabilityRedU2.unity
     guid: edf5ebf694655c640a89980af373a199
+  - enabled: 1
+    path: Assets/Scenes/direction/direction2.unity
+    guid: fd73a8d7d3264e344b269b1d3785db65
+  - enabled: 1
+    path: Assets/Scenes/direction/direction3.unity
+    guid: 3cb8496c875e9d44ebf667cb42b821e5
+  - enabled: 1
+    path: Assets/Scenes/direction/direction4.unity
+    guid: 211795ddf6bf10647b56d35e0c2048cf
+  - enabled: 1
+    path: Assets/Scenes/direction/direction5.unity
+    guid: fb56894c50ec2fa44aa4746b12e6032d
+  - enabled: 1
+    path: Assets/Scenes/direction/direction6.unity
+    guid: 769d0ca6f06e0324aab665e8f5636180
   m_configObjects: {}
