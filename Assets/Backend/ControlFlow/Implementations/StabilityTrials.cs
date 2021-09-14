@@ -147,7 +147,7 @@ public class GreenStabilityTrial : StabilityTrial, ISelectorTrial<Auswahlsymbol>
         Selector = s;
     }
 
-    private Tuple<int, Bauklotz> Solution
+    private Tuple<string, Bauklotz> Solution
     {
         get
         {
@@ -155,9 +155,9 @@ public class GreenStabilityTrial : StabilityTrial, ISelectorTrial<Auswahlsymbol>
             {
                 var solutionArea = IsCorrectlyPlaced(block);
                 if (solutionArea != null)
-                    return new Tuple<int, Bauklotz>(solutionArea.Lösungsnummer, block);
+                    return new Tuple<string, Bauklotz>(solutionArea.Beschreibung, block);
             }
-            return new Tuple<int, Bauklotz>(-1, null);
+            return new Tuple<string, Bauklotz>("", null);
         }
     }
     private bool IsSolved { get { return Solution.Item2 != null; } }
