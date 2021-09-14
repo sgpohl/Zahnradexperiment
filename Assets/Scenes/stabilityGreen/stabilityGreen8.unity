@@ -134,6 +134,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: BauklotzZielgebiet (1)
       objectReference: {fileID: 0}
+    - target: {fileID: 1575072570647433465, guid: 5908e0d74ef21944494554e878ab5a95, type: 3}
+      propertyPath: Beschreibung
+      value: unten rechts
+      objectReference: {fileID: 0}
     - target: {fileID: 1575072570647433479, guid: 5908e0d74ef21944494554e878ab5a95, type: 3}
       propertyPath: m_RootOrder
       value: 5

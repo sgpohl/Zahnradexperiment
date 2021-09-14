@@ -644,6 +644,10 @@ PrefabInstance:
       value: BauklotzZielgebiet (4)
       objectReference: {fileID: 0}
     - target: {fileID: 1575072570647433465, guid: 5908e0d74ef21944494554e878ab5a95, type: 3}
+      propertyPath: Beschreibung
+      value: oben links-mittig
+      objectReference: {fileID: 0}
+    - target: {fileID: 1575072570647433465, guid: 5908e0d74ef21944494554e878ab5a95, type: 3}
       propertyPath: "L\xF6sungsnummer"
       value: 1
       objectReference: {fileID: 0}

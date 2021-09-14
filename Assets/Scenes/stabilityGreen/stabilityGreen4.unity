@@ -288,6 +288,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 90
       objectReference: {fileID: 0}
+    - target: {fileID: 2587811105055105280, guid: b8a1e09960034a74f9dc816bb441249f, type: 3}
+      propertyPath: Beschreibung
+      value: oben rechts
+      objectReference: {fileID: 0}
     - target: {fileID: 2587811105055105281, guid: b8a1e09960034a74f9dc816bb441249f, type: 3}
       propertyPath: m_Name
       value: BauklotzZielgebietDreieck
