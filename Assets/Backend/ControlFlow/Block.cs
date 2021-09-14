@@ -94,7 +94,7 @@ public abstract class Block
                 b = new GenericBlock<GreenStabilityTrial>("RESP,CRESP,AnzahlVersuche,Antwortkoordinaten,RT1,RT2,RT3,RT-Gesamt");
                 break;
             case "stabilityRed":
-                b = new GenericBlock<RedStabilityTrial>("RT-Erstauswahl,RT-LetzteWahl,RT-Gesamt,AnzahlSelektionen,RESP,CRESP");
+                b = new RedStabilityBlock(2);
                 break;
             case "matrix":
                 b = new MatrixBlock(7, 3);
@@ -189,9 +189,39 @@ public class GenericBlock<T> : Block where T : ITrial, new()
     }
 }
 
+
 public class CogBlock<T> : GenericBlock<T> where T : ITrial, new()
 {
     public override string GameBoardSceneName() { return "board"; }
+}
+
+public class RedStabilityBlock : GenericBlock<RedStabilityTrial>
+{
+    int MaxTrainingLevels;
+    int CurrentTrainingLevel;
+    public RedStabilityBlock(int TrainingLevels) : base("RT-Erstauswahl,RT-LetzteWahl,RT-Gesamt,AnzahlSelektionen,RESP,CRESP")
+    {
+        MaxTrainingLevels = TrainingLevels;
+        CurrentTrainingLevel = 1;
+    }
+
+    protected override string GetNextTrialPostfix()
+    {
+        if (CurrentTrainingLevel <= MaxTrainingLevels)
+            return "U" + (CurrentTrainingLevel).ToString();
+        return base.GetNextTrialPostfix();
+    }
+
+    public override bool EndCurrentTrial()
+    {
+        if (CurrentTrainingLevel <= MaxTrainingLevels)
+        {
+            CurrentTrainingLevel++;
+            CurrentTrial.Close();
+            return false;
+        }
+        return base.EndCurrentTrial();
+    }
 }
 
 public class PretestBlock : GenericBlock<SelectionTrial>
