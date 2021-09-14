@@ -81,9 +81,9 @@ public class Measurement : MonoBehaviour
     {
         CurrentTrial.Interaktionen.Add(new Zahnradauswahl { ZahnradID = id, CRESP = correct, Zeitpunkt = timer.ElapsedMilliseconds });
     }
-    public void MeasureDirectionSelected(DirectionTrial.Direction dir, bool correct)
+    public void MeasureDirectionSelected(DirectionTrial.Direction dir, int id, bool correct)
     {
-        CurrentTrial.Interaktionen.Add(new Richtungsauswahl { Richtung = dir, CRESP = correct, Zeitpunkt = timer.ElapsedMilliseconds });
+        CurrentTrial.Interaktionen.Add(new Richtungsauswahl { Richtung = dir, CRESP = correct, ZahnradID = id, Zeitpunkt = timer.ElapsedMilliseconds });
     }
     public void MeasurePropellerAttached(int id)
     {
@@ -226,6 +226,8 @@ public class Measurement : MonoBehaviour
         public DirectionTrial.Direction Richtung;
         [XmlAttribute]
         public bool CRESP;
+        [XmlAttribute]
+        public int ZahnradID;
     }
     public class Zahnradauswahl : Interaktion
     {

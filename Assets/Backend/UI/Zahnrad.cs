@@ -18,6 +18,8 @@ public class Zahnrad : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
     public bool CanRotateManually = true;
     public bool IsStart = false;
     public bool IsTarget = false;
+    public string Beschreibung = "";
+
     public DirectionTrial.Direction Direction = DirectionTrial.Direction.INVALID;
     public SpriteRenderer sprite;
 
