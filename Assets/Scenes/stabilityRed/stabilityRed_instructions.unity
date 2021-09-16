@@ -132,7 +132,10 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 303862391086869193, guid: 04143813b3d265648a638d9026631d89, type: 3}
       propertyPath: m_Text
-      value: Denkst du diese Bausteine bleiben stehen oder fallen um?
+      value: 'Was passiert, wenn der schwarze Stein entfernt wird?
+
+        Bleiben
+        die Bausteine stehen oder fallen sie um?'
       objectReference: {fileID: 0}
     - target: {fileID: 303862391086869195, guid: 04143813b3d265648a638d9026631d89, type: 3}
       propertyPath: m_RootOrder
