@@ -133,7 +133,7 @@ PrefabInstance:
     - target: {fileID: 303862391086869193, guid: 04143813b3d265648a638d9026631d89, type: 3}
       propertyPath: m_Text
       value: "Karussell:\nOrdne die Zahnr\xE4der so an, dass sich das Zielzahnrad
-        \n(das Karussel) in die vorgegebene Richtung dreht."
+        \n(das Karussell) in die vorgegebene Richtung dreht."
       objectReference: {fileID: 0}
     - target: {fileID: 303862391086869195, guid: 04143813b3d265648a638d9026631d89, type: 3}
       propertyPath: m_RootOrder

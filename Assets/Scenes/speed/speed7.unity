@@ -249,7 +249,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3144942242533493193, guid: 325670905eba7ab46b74dcb7aa466685, type: 3}
       propertyPath: IstDieKorrekteLoesung
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 325670905eba7ab46b74dcb7aa466685, type: 3}
@@ -445,7 +445,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 303862391086869193, guid: 04143813b3d265648a638d9026631d89, type: 3}
       propertyPath: m_Text
-      value: "W\xE4hle das Zahnrad aus, \ndas sich langsamer dreht \nals das Startzahnrad."
+      value: "W\xE4hle das Zahnrad aus, \ndas sich langsamer dreht \nals die blauen."
       objectReference: {fileID: 0}
     - target: {fileID: 303862391086869195, guid: 04143813b3d265648a638d9026631d89, type: 3}
       propertyPath: m_RootOrder
@@ -562,7 +562,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8936159802918288999, guid: 4f6877bec284740418b818f3b08387f8, type: 3}
       propertyPath: IstDieKorrekteLoesung
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 4f6877bec284740418b818f3b08387f8, type: 3}
