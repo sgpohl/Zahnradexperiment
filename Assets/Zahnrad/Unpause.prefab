@@ -344,7 +344,7 @@ MonoBehaviour:
           m_BoolArgument: 0
         m_CallState: 2
   Grundfarbe: {r: 1, g: 1, b: 1, a: 0.7}
-  Auswahlfarbe: {r: 0, g: 0.7, b: 0, a: 1}
+  Auswahlfarbe: {r: 0.7, g: 0, b: 0, a: 1}
   InaktiveFarbe: {r: 1, g: 0.2, b: 0.2, a: 0.5}
 --- !u!1 &2559028945021462610
 GameObject:
