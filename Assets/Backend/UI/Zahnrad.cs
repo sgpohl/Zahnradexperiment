@@ -9,8 +9,8 @@ public class Zahnrad : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
 {
     public CircleCollider2D InnerCollider { get; private set; }
     public CircleCollider2D OuterCollider { get; private set; }
-    public float InnerRadius { get => InnerCollider.radius * transform.localScale.x; }
-    public float OuterRadius { get => OuterCollider.radius * transform.localScale.x; }
+    public float InnerRadius { get => InnerCollider.radius * transform.lossyScale.x; }
+    public float OuterRadius { get => OuterCollider.radius * transform.lossyScale.x; }
 
     public List<Zahnrad> ConnectedCogs;
     public ConnectedComponent System;
