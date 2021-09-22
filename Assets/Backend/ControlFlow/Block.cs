@@ -118,7 +118,24 @@ public abstract class Block
         Replay.StartRecording();
     }
 
-    public string FileName {    get {   return "VPN" + Experiment.Measurement.VPN_Num.ToString()+"_"+ Config;   }   }
+    public string FileName {
+        get
+        {
+            return "VPN" + Experiment.Measurement.VPN_Num.ToString() + "_" + Config;
+        }
+    }
+    public string FileNameOffset(string ending)
+    {
+        string o = "";
+        int offset = 1;
+        while (System.IO.File.Exists(Path.Combine(Application.persistentDataPath, FileName +o+ ending)))
+        {
+            o = "(" + offset.ToString() + ")";
+            offset++;
+        }
+        return o;
+    }
+
     public void OpenFromReplay()
     {
         IsOpen = true;
@@ -138,7 +155,7 @@ public abstract class Block
         }
 
         Experiment.Measurement.SaveCurrentBlock();
-        Replay.Save(FileName + ".replay");
+        Replay.Save(FileName + FileNameOffset(".replay") + ".replay");
     }
 
     public void Update(float DeltaTime)

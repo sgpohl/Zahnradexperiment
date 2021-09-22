@@ -116,7 +116,9 @@ public class Measurement : MonoBehaviour
         var data_block = data.Blocks[blockIdx];
         var logic_block = Experiment.Instance.Blocks[blockIdx];
 
-        string csvPath = Path.Combine(Application.persistentDataPath, logic_block.FileName+".csv");
+
+
+        string csvPath = Path.Combine(Application.persistentDataPath, logic_block.FileName + logic_block.FileNameOffset(".csv") + ".csv");
 
         using (var stream = new StreamWriter(new FileStream(csvPath, FileMode.Create)))
         {
