@@ -122,6 +122,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9c7aad627ef36e24fa825b37d2f771db, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  TargetTimeForEffect: 1
   OnPress:
     m_PersistentCalls:
       m_Calls:

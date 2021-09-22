@@ -112,6 +112,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9db7e72b5374e8748b29a9b3d3055e50, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  TargetTimeForEffect: 0.4
   OnPress:
     m_PersistentCalls:
       m_Calls:
@@ -284,6 +285,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 871f1043676465c40bcaa9a875bcc8c2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  TargetTimeForEffect: 0.4
   OnPress:
     m_PersistentCalls:
       m_Calls:
