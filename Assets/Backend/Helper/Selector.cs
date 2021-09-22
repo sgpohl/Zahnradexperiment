@@ -17,6 +17,8 @@ public abstract class Selector : MonoBehaviour, IPointerDownHandler, IPointerUpH
 
     protected float OtherProgress<T>(List<T> Selectors, T CurrentlySelected) where T : Selector
     {
+        if (Selectors == null)
+            return 0.0f;
         float otherProgress = 0.0f;
         foreach (T other in Selectors)
         {
