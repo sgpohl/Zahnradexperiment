@@ -1079,7 +1079,7 @@ PrefabInstance:
       objectReference: {fileID: 2559028945021462610, guid: ebcb0bcfe37fdc24998e6e678b6c7c57, type: 3}
     - target: {fileID: 6249968693716496787, guid: 6c09a1460bfe67d45a1e05935a1ed961, type: 3}
       propertyPath: MinutenBisPause
-      value: 3
+      value: 0.5
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 6c09a1460bfe67d45a1e05935a1ed961, type: 3}

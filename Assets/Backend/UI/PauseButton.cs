@@ -52,7 +52,7 @@ public class PauseButton : PlayButton
         timer.OnProgress = TimerProgress;
 
         var rend = this.GetComponent<SpriteRenderer>();
-        rend.material.SetColor("_PColor", AbgelaufeneZeitFarbe);
+        rend.material.SetColor("_PColor", Auswahlfarbe);
         rend.material.SetFloat("_Progress", 0.0f);
     }
 
@@ -61,7 +61,8 @@ public class PauseButton : PlayButton
         this.Grundfarbe = AbgelaufeneZeitFarbe;
 
         var rend = this.GetComponent<SpriteRenderer>();
-        rend.material.SetFloat("_Progress", 0.0f);
+        rend.material.SetFloat("_Progress", 2.0f);
+        rend.material.SetColor("_PColor", AbgelaufeneZeitFarbe);
     }
 
     public void TimerProgress(float progress)
