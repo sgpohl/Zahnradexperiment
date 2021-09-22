@@ -45,7 +45,7 @@ EditorBuildSettings:
     path: Assets/Scenes/stabilityGreen/stabilityGreen_instructions.unity
     guid: 4bb6060b641f06747b27cea91ba7e15d
   - enabled: 1
-    path: Assets/Scenes/stabilityGreen/stabilityGreen1.unity
+    path: Assets/Scenes/stabilityGreen/stabilityGreen2.unity
     guid: 8083dd9f7fab6c843a35073530763be2
   - enabled: 1
     path: Assets/Scenes/stabilityRed/stabilityRed1.unity
@@ -66,7 +66,7 @@ EditorBuildSettings:
     path: Assets/Scenes/pretest/vocabulary/vocabulary1.unity
     guid: 0f53210287722ff49a9f2086d86554dc
   - enabled: 1
-    path: Assets/Scenes/stabilityGreen/stabilityGreen2.unity
+    path: Assets/Scenes/stabilityGreen/stabilityGreen3.unity
     guid: 1a2322208720e2148b1e5c606198e382
   - enabled: 1
     path: Assets/Scenes/training/trainingStability_instructions.unity
@@ -75,7 +75,7 @@ EditorBuildSettings:
     path: Assets/Scenes/training/trainingStability1.unity
     guid: 58760e57d3575b54db25ae9035f061b2
   - enabled: 1
-    path: Assets/Scenes/stabilityGreen/stabilityGreen3.unity
+    path: Assets/Scenes/stabilityGreen/stabilityGreen4.unity
     guid: 383fefff9f6dcb64db95655ba60721a1
   - enabled: 1
     path: Assets/Scenes/pretest/matrix/matrix26.unity
@@ -264,19 +264,19 @@ EditorBuildSettings:
     path: Assets/Scenes/pretest/vocabulary/vocabulary2.unity
     guid: 957861a4269eca849bf8889b6377143a
   - enabled: 1
-    path: Assets/Scenes/stabilityGreen/stabilityGreen4.unity
+    path: Assets/Scenes/stabilityGreen/stabilityGreen5.unity
     guid: adf4efa308f019a42b81c600bd4c8540
   - enabled: 1
-    path: Assets/Scenes/stabilityGreen/stabilityGreen8.unity
+    path: Assets/Scenes/stabilityGreen/stabilityGreen9.unity
     guid: b74faa3d8da938b4b840118d2cb6f28d
   - enabled: 1
-    path: Assets/Scenes/stabilityGreen/stabilityGreen7.unity
+    path: Assets/Scenes/stabilityGreen/stabilityGreen8.unity
     guid: 610e945b89118e042934fc11e5ff1f53
   - enabled: 1
-    path: Assets/Scenes/stabilityGreen/stabilityGreen6.unity
+    path: Assets/Scenes/stabilityGreen/stabilityGreen7.unity
     guid: 7e6a4d64bcdb9ed4882c23070d4ebfb6
   - enabled: 1
-    path: Assets/Scenes/stabilityGreen/stabilityGreen5.unity
+    path: Assets/Scenes/stabilityGreen/stabilityGreen6.unity
     guid: f9920d7a107093540b3e55c9ce7b738e
   - enabled: 1
     path: Assets/Scenes/stabilityRed/stabilityRed2.unity
@@ -368,4 +368,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/speed/speed9.unity
     guid: 92b1ef5ca8ed70b4a8f28ee9a222ed59
+  - enabled: 1
+    path: Assets/Scenes/stabilityGreen/stabilityGreen1.unity
+    guid: 8697e4bf2651a1a4cadf974b9efdda6e
   m_configObjects: {}
