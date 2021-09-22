@@ -278,7 +278,7 @@ public class Zahnrad : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
     
     public int Size
     {
-        get {return (int)(InnerRadius*20 + 0.5);}
+        get {return (int)(InnerRadius*20/transform.lossyScale.x + 0.5);}
     }
     
     private bool CursorRotating = false;
