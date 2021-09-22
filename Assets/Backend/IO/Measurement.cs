@@ -69,9 +69,9 @@ public class Measurement : MonoBehaviour
         trial.Zahnraeder.Add(new ZahnradInfo {ID = id, Zaehne = size});
         
     }
-    public void MeasureCogPlaced(int x, int y, bool connected, bool onBoard, int id)
+    public void MeasureCogPlaced(int x, int y, bool connected, bool onBoard, int id, int systemSize)
     {
-        CurrentTrial.Interaktionen.Add(new Platzierung{x = x, y=y, ZahnradID=id, AufBrett = onBoard, Zeitpunkt = timer.ElapsedMilliseconds, verbunden = connected});
+        CurrentTrial.Interaktionen.Add(new Platzierung{x = x, y=y, ZahnradID=id, AufBrett = onBoard, Zeitpunkt = timer.ElapsedMilliseconds, verbunden = connected, Kettenlaenge = systemSize });
     }
     public void MeasureCogRotated(int dir, int id, int systemSize)
     {
@@ -222,6 +222,8 @@ public class Measurement : MonoBehaviour
         public bool verbunden;
         [XmlAttribute]
         public bool AufBrett;
+        [XmlAttribute]
+        public int Kettenlaenge;
     }
     public class Drehung : Interaktion
     {

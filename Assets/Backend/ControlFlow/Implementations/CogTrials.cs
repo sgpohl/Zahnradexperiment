@@ -134,7 +134,7 @@ public class CogTrial : ITrial, ITrialFunctionality<Zahnrad>
     {
         int id = Cogs.FindIndex(c => c == cog);
         bool connected = cog.ConnectedCogs.Count > 0;
-        Experiment.Measurement.MeasureCogPlaced((int)(pos.x * 10), (int)(pos.y * 10), connected, cog.OnBoard, id);
+        Experiment.Measurement.MeasureCogPlaced((int)(pos.x * 10), (int)(pos.y * 10), connected, cog.OnBoard, id, cog.System.Size);
     }
 }
 
@@ -494,14 +494,22 @@ public class PropellerTrial : CogTrial
                 z2.AppendFormat(",{0}", p.Zeitpunkt);
 
                 if (!PreviouslyOnBoard[p.ZahnradID] && p.AufBrett)
+                {
                     z3.Append(",rein");
+                    z4.AppendFormat(",{0}", p.Kettenlaenge);
+                }
                 else if (PreviouslyOnBoard[p.ZahnradID] && p.AufBrett)
+                {
                     z3.Append(",innerhalb");
+                    z4.AppendFormat(",{0}", p.Kettenlaenge);
+                }
                 else
+                {
                     z3.Append(",raus");
+                    z4.Append(",");
+                }
 
                 int cogSize = Experiment.Measurement.CurrentTrial.Zahnraeder[p.ZahnradID].Zaehne;
-                z4.Append(",");
                 z5.AppendFormat(",{0}", cogSize);
 
 
@@ -652,13 +660,21 @@ public class CarouselTrial : CogTrial
                 z2.AppendFormat(",{0}", p.Zeitpunkt);
 
                 if (!PreviouslyOnBoard[p.ZahnradID] && p.AufBrett)
+                { 
                     z3.Append(",rein");
+                    z4.AppendFormat(",{0}", p.Kettenlaenge);
+                }
                 else if (PreviouslyOnBoard[p.ZahnradID] && p.AufBrett)
+                {
                     z3.Append(",innerhalb");
+                    z4.AppendFormat(",{0}", p.Kettenlaenge);
+                }
                 else
+                {
                     z3.Append(",raus");
+                    z4.Append(",");
+                }
 
-                z4.Append(",");
                 z5.AppendFormat(",{0}", cogSize);
 
                 PreviouslyOnBoard[p.ZahnradID] = p.AufBrett;
@@ -671,7 +687,7 @@ public class CarouselTrial : CogTrial
                 z1.Append(",Drehung");
                 z2.AppendFormat(",{0}", d.Zeitpunkt);
                 z3.Append(",");
-                z4.AppendFormat(",{0}", Cogs[d.ZahnradID].System.Size);
+                z4.AppendFormat(",{0}", d.Kettenlaenge);
                 z5.AppendFormat(",{0}", cogSize);
             }
         }
