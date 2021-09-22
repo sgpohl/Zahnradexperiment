@@ -4,6 +4,7 @@ Shader "Unlit/TimerShader"
     {
         _MainTex ("Texture", 2D) = "white" {}
 		_Progress ("Progress", float) = 0
+		_Scale("BorderScale", float) = 10
 		_Color ("ProgressColor", Color) = (0,0,0,1)
     }
     SubShader
@@ -38,6 +39,7 @@ Shader "Unlit/TimerShader"
 
 			fixed4 _Color;
 			float _Progress;
+			float _Scale;
 
             v2f vert (appdata v)
             {
@@ -51,8 +53,8 @@ Shader "Unlit/TimerShader"
             {
                 // sample the texture
                 fixed4 col = tex2D(_MainTex, i.uv);
-				if(i.uv.y < _Progress)
-					col *= _Color;
+				float fac = (saturate((_Progress - i.uv.y) * _Scale));
+				col = (1.f-fac)*col + fac*col*_Color;
                 return col;
             }
             ENDCG
