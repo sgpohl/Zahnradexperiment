@@ -42,6 +42,9 @@ public class Propeller : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
     // Update is called once per frame
     void Update()
     {
+        var trial = Experiment.CurrentTrial<CogTrial>();
+        if (trial.IsPaused)
+            return;
 
         if (CursorSelected)
         {
@@ -82,6 +85,9 @@ public class Propeller : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
     private Vector2 SelectionOffset;
     public void OnPointerDown(PointerEventData eventData)
     {
+        var trial = Experiment.CurrentTrial<CogTrial>();
+        if (trial.IsPaused)
+            return;
         CursorSelect(eventData.position);
     }
     public void OnPointerUp(PointerEventData eventData)

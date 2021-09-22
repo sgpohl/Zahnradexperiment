@@ -37,6 +37,20 @@ public class CogTrial : ITrial, ITrialFunctionality<Zahnrad>
         base.Open();
     }
 
+    private bool _ispaused = false;
+    public virtual bool IsPaused
+    {
+        get => _ispaused;
+        set
+        {
+            _ispaused = value;
+            if (_ispaused)
+                Experiment.Measurement.HaltTimer();
+            else
+                Experiment.Measurement.ContinueTimer();
+        }
+    }
+
     public virtual void RegisterCog(Zahnrad cog)
     {
         Cogs.Add(cog);

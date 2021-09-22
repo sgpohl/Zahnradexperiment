@@ -101,6 +101,14 @@ public class Measurement : MonoBehaviour
     {
         CurrentTrial.Dauer = timer.ElapsedMilliseconds;
     }
+    public void HaltTimer()
+    {
+        timer.Stop();
+    }
+    public void ContinueTimer()
+    {
+        timer.Start();
+    }
 
     public void SaveCurrentBlock()
     {

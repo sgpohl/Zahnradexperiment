@@ -18,7 +18,7 @@ public class Experiment : MonoBehaviour
     public static Measurement Measurement { get { return Experiment.Instance._measurement; } }
 
     private Canvas menue;
-    public PlayButton ContinueButton { private get; set; }
+    public PlayButton ContinueButton { get; set; }
 
     public List<Block> Blocks { get; private set; }
     public static Block CurrentBlock

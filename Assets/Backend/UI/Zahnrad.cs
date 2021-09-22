@@ -287,6 +287,7 @@ public class Zahnrad : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
     private float AverageRotationSpeed;
     private Vector3 PreRotationAngle;
     private float WiggleAngle;
+    private bool previouslyPaused = false;
     void Update()
     {
         /*
@@ -307,7 +308,20 @@ public class Zahnrad : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
             }
         }*/
 
-        if(CursorRotating && OnBoard)
+        var trial = Experiment.CurrentTrial<CogTrial>();
+        if(trial.IsPaused)
+        {
+            if(!previouslyPaused)
+                Movement.Enabled = false;
+            previouslyPaused = true;
+            return;
+        }
+        else if(previouslyPaused)
+            Movement.Enabled = !this.IsFixedInPlace;
+
+        previouslyPaused = false;
+
+        if (CursorRotating && OnBoard)
         {
             Vector3 mouse = Camera.main.ScreenToWorldPoint(new Vector3(Experiment.Input.mousePosition.x, Experiment.Input.mousePosition.y, Camera.main.nearClipPlane));
             Vector2 rotator = OuterCollider.ClosestPoint(mouse);
