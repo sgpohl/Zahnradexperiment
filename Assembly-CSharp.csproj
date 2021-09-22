@@ -80,6 +80,9 @@
     <Compile Include="Assets\Backend\UI\UnpauseButton.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Assets\Zahnrad\TimerShader.shader" />
+  </ItemGroup>
+  <ItemGroup>
     <Reference Include="UnityEngine">
       <HintPath>C:\Program Files\Unity\Hub\Editor\2020.3.17f1\Editor\Data\Managed\UnityEngine\UnityEngine.dll</HintPath>
     </Reference>

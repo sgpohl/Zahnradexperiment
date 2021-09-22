@@ -16,6 +16,8 @@ public class PauseButton : PlayButton
         private long ms;
         public delegate void Callback();
         public Callback Finished = delegate { };
+        public delegate void CallbackFloat(float p);
+        public CallbackFloat OnProgress = delegate { };
 
         public void SetTargetTime(float min)
         {
@@ -30,10 +32,14 @@ public class PauseButton : PlayButton
 
         public void Update()
         {
-            if(t.ElapsedMilliseconds >= ms)
+            if (t.ElapsedMilliseconds >= ms)
             {
                 Finished();
                 Destroy(this);
+            }
+            else
+            {
+                OnProgress(((float)t.ElapsedMilliseconds) / ((float)ms));
             }
         }
     }
@@ -43,11 +49,25 @@ public class PauseButton : PlayButton
         var timer = gameObject.AddComponent<Timer>();
         timer.SetTargetTime(MinutenBisPause);
         timer.Finished = this.TimeExpired;
+        timer.OnProgress = TimerProgress;
+
+        var rend = this.GetComponent<SpriteRenderer>();
+        rend.material.SetColor("_Color", AbgelaufeneZeitFarbe);
+        rend.material.SetFloat("_Progress", 0.0f);
     }
 
     public void TimeExpired()
     {
         this.Grundfarbe = AbgelaufeneZeitFarbe;
+
+        var rend = this.GetComponent<SpriteRenderer>();
+        rend.material.SetFloat("_Progress", 0.0f);
+    }
+
+    public void TimerProgress(float progress)
+    {
+        var rend = this.GetComponent<SpriteRenderer>();
+        rend.material.SetFloat("_Progress", progress);
     }
 
     public void PauseCurrentTrial()
