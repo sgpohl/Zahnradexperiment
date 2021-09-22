@@ -116,7 +116,7 @@ CircleCollider2D:
   m_UsedByComposite: 0
   m_Offset: {x: 0, y: 0}
   serializedVersion: 2
-  m_Radius: 1
+  m_Radius: 1.05
 --- !u!114 &7153340047879455962
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -134,5 +134,6 @@ MonoBehaviour:
   CanRotateManually: 1
   IsStart: 0
   IsTarget: 0
+  Beschreibung: 
   Direction: 0
   sprite: {fileID: 0}

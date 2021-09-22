@@ -134,5 +134,6 @@ MonoBehaviour:
   CanRotateManually: 1
   IsStart: 0
   IsTarget: 0
+  Beschreibung: 
   Direction: 0
   sprite: {fileID: 0}
