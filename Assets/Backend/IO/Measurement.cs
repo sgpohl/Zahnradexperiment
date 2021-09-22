@@ -73,9 +73,9 @@ public class Measurement : MonoBehaviour
     {
         CurrentTrial.Interaktionen.Add(new Platzierung{x = x, y=y, ZahnradID=id, AufBrett = onBoard, Zeitpunkt = timer.ElapsedMilliseconds, verbunden = connected});
     }
-    public void MeasureCogRotated(int dir, int id)
+    public void MeasureCogRotated(int dir, int id, int systemSize)
     {
-        CurrentTrial.Interaktionen.Add(new Drehung{Richtung=dir, ZahnradID=id, Zeitpunkt=timer.ElapsedMilliseconds});
+        CurrentTrial.Interaktionen.Add(new Drehung{Richtung=dir, ZahnradID=id, Kettenlaenge=systemSize, Zeitpunkt=timer.ElapsedMilliseconds});
     }
     public void MeasureCogSelected(int id, bool correct)
     {
@@ -219,6 +219,8 @@ public class Measurement : MonoBehaviour
         public int ZahnradID;
         [XmlAttribute]
         public int Richtung;
+        [XmlAttribute]
+        public int Kettenlaenge;
     }
     public class Richtungsauswahl : Interaktion
     {

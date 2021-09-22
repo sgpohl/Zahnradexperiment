@@ -114,7 +114,7 @@ public class CogTrial : ITrial, ITrialFunctionality<Zahnrad>
     public void RotationApplied(Zahnrad cog, float speed)
     {
         int id = Cogs.FindIndex(c => c == cog);
-        Experiment.Measurement.MeasureCogRotated((int)speed, id);
+        Experiment.Measurement.MeasureCogRotated((int)speed, id, Cogs[id].System.Size);
     }
     public void PlacementApplied(Zahnrad cog, Vector2 pos)
     {
@@ -512,7 +512,7 @@ public class PropellerTrial : CogTrial
                 z1.Append(",Drehung");
                 z2.AppendFormat(",{0}", d.Zeitpunkt);
                 z3.Append(",");
-                z4.AppendFormat(",{0}", Cogs[d.ZahnradID].System.Size);
+                z4.AppendFormat(",{0}", d.Kettenlaenge);
                 z5.AppendFormat(",{0}", Experiment.Measurement.CurrentTrial.Zahnraeder[d.ZahnradID].Zaehne);
                 z6.Append(",");
             }
