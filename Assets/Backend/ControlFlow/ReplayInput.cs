@@ -275,8 +275,40 @@ public class ReplayInput : BaseInput
                 point.MouseChange = false;
             }
 
+            /*
+            float ox = Screen.width - xMax;
+            float oy = Screen.height - yMax;
+
             point.x = EncodeFloat(x, uint.MaxValue, xMin, xMax);
             point.y = EncodeFloat(y, uint.MaxValue >> 1, yMin, yMax);
+
+            Debug.Log(ox.ToString() + "  " + oy.ToString()+"->"+ point.x.ToString() + "  " + point.y.ToString());
+
+            point.x = point.x + ox / 2;
+            point.y = point.y + ox / 2;
+            Debug.Log("->" + point.x.ToString() + "  " + point.y.ToString());
+            */
+
+            /*
+            float sn = (float)Screen.width / (float)Screen.height;
+            float so = (float)xMax / (float)yMax;
+
+            float scaleX = Screen.width;
+            float scaleY = Screen.height;
+            if (sn < so)
+                scaleY = scaleX / sn;
+            else
+                scaleX = scaleY * sn;
+
+            float ox = scaleX - Screen.width;
+            float oy = scaleY - Screen.height;*/
+
+            float scaleY = Screen.height;
+            float scaleX = Screen.height * ((float)xMax / (float)yMax);
+            float ox = Screen.width - scaleX;
+
+            point.x = EncodeFloat(x, uint.MaxValue, 0, (int)scaleX) + ox/2;
+            point.y = EncodeFloat(y, uint.MaxValue >> 1, 0, (int)scaleY);
 
             return point;
         }
