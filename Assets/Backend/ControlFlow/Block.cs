@@ -79,7 +79,7 @@ public abstract class Block
                 b = new CogBlock<PropellerTrial>();
                 break;
             case "speed":
-                b = new CogBlock<SpeedTrial>();
+                b = new SpeedBlock();
                 break;
             case "training":
                 b = new CogBlock<CogTrial>();
@@ -210,6 +210,11 @@ public class GenericBlock<T> : Block where T : ITrial, new()
 public class CogBlock<T> : GenericBlock<T> where T : ITrial, new()
 {
     public override string GameBoardSceneName() { return "board"; }
+}
+
+public class SpeedBlock : CogBlock<SpeedTrial>
+{
+    public override string GameBoardSceneName() { return null; }
 }
 
 public class RedStabilityBlock : GenericBlock<RedStabilityTrial>
