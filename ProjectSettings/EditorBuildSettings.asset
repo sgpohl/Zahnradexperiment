@@ -341,9 +341,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/direction/direction6.unity
     guid: fb56894c50ec2fa44aa4746b12e6032d
-  - enabled: 1
-    path: Assets/Scenes/direction/direction7.unity
-    guid: 769d0ca6f06e0324aab665e8f5636180
+  - enabled: 0
+    path: 
+    guid: 00000000000000000000000000000000
   - enabled: 1
     path: Assets/Scenes/speed/speed3.unity
     guid: eb1bee1157a61a348b1d9653fbf70780
