@@ -132,11 +132,12 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 303862391086869193, guid: 04143813b3d265648a638d9026631d89, type: 3}
       propertyPath: m_Text
-      value: "Propeller:\nLege Zahnr\xE4der auf das Brett und befestige Propeller
-        \nauf ihnen. Setze die Zahnr\xE4der und Propeller \nso zusammen, dass sich
-        ein Propeller m\xF6glichst schnell \nund ein Propeller m\xF6glichst langsam
-        dreht, sobald\ndas Startzahnrad gedreht wird. \nDie beiden Propeller sollen
-        sich gegenseitig nicht ber\xFChren."
+      value: "[Zeigen Sie das ausgedruckte Ausgangsbild]\nLege Zahnr\xE4der auf das
+        Brett und befestige Propeller \n[darauf zeigen] auf ihnen. Setze die Zahnr\xE4der
+        \nmit den Propellern so zusammen, dass sich \nein Propeller m\xF6glichst
+        schnell und ein Propeller \nm\xF6glichst langsam dreht, sobald das \nStartzahnrad
+        [darauf zeigen] gedreht wird. \nDie beiden Propeller sollen sich beim \nDrehen
+        gegenseitig nicht ber\xFChren."
       objectReference: {fileID: 0}
     - target: {fileID: 303862391086869195, guid: 04143813b3d265648a638d9026631d89, type: 3}
       propertyPath: m_RootOrder
