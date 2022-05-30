@@ -102,6 +102,15 @@ public abstract class Block
             case "vocabulary":
                 b = new VocabularyBlock(13);
                 break;
+            case "carouselTransfer":
+                b = new CogBlock<CarouselTrial>(); // orientiert an Standard carousel
+                break;
+            case "prt":
+                b = new RedStabilityBlock(0); // orientiert an RedStab
+                break;
+            case "sts":
+                b = new RedStabilityBlock(1); // orientiert an RedStab
+                break;
             default:
                 throw new System.ArgumentException("Tried to instantiate a block with an unknown type: '" + name + "'");
         }
